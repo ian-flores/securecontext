@@ -1,0 +1,137 @@
+# securecontext
+
+> \[!CAUTION\] **Alpha software.** This package is part of a broader
+> effort by [Ian Flores Siaca](https://github.com/ian-flores) to develop
+> proper AI infrastructure for the R ecosystem. It is under active
+> development and should **not** be used in production until an official
+> release is published. APIs may change without notice.
+
+Memory, knowledge persistence, RAG retrieval, and context management for
+R LLM agents.
+
+## Installation
+
+``` r
+# install.packages("pak")
+pak::pak("ian-flores/securecontext")
+```
+
+## Features
+
+- **Document chunking** – fixed-size, sentence, paragraph, and recursive
+  strategies
+- **TF-IDF embeddings** – local embeddings with no external API required
+- **Vector store** – in-memory cosine similarity search with RDS
+  persistence
+- **Knowledge store** – persistent JSONL key-value storage
+- **Semantic retrieval** – query documents by meaning
+- **Context builder** – token-aware priority-based context assembly
+- **Integration helpers** – works with orchestr and ellmer
+
+## Quick start
+
+``` r
+library(securecontext)
+
+# Create documents
+docs <- list(
+  document("R is great for statistics.", metadata = list(topic = "R")),
+  document("Python excels at machine learning.", metadata = list(topic = "Python"))
+)
+
+# Build embeddings and index documents
+emb <- embed_tfidf(vapply(docs, `[[`, character(1), "text"))
+vs <- vector_store$new(dims = emb$dims)
+ret <- retriever(vs, emb)
+add_documents(ret, docs)
+
+# Retrieve relevant context
+result <- context_for_chat(ret, "statistical computing", max_tokens = 2000)
+cat(result$context)
+```
+
+## License
+
+MIT
+
+# Package index
+
+## Documents
+
+- [`document()`](https://ian-flores.github.io/securecontext/reference/document.md)
+  : Create a document
+- [`is_document()`](https://ian-flores.github.io/securecontext/reference/is_document.md)
+  : Test if object is a document
+
+## Chunking
+
+- [`chunk_text()`](https://ian-flores.github.io/securecontext/reference/chunk_text.md)
+  : Chunk text into smaller pieces
+- [`chunk_fixed()`](https://ian-flores.github.io/securecontext/reference/chunk_fixed.md)
+  : Fixed-size text chunking
+- [`chunk_sentence()`](https://ian-flores.github.io/securecontext/reference/chunk_sentence.md)
+  : Sentence-based text chunking
+- [`chunk_paragraph()`](https://ian-flores.github.io/securecontext/reference/chunk_paragraph.md)
+  : Paragraph-based text chunking
+- [`chunk_recursive()`](https://ian-flores.github.io/securecontext/reference/chunk_recursive.md)
+  : Recursive text chunking
+
+## Embeddings
+
+- [`new_embedder()`](https://ian-flores.github.io/securecontext/reference/new_embedder.md)
+  : Create an embedder
+- [`embed_tfidf()`](https://ian-flores.github.io/securecontext/reference/embed_tfidf.md)
+  : Create a TF-IDF embedder
+- [`embed_texts()`](https://ian-flores.github.io/securecontext/reference/embed_texts.md)
+  : Embed texts using an embedder
+
+## Vector Store
+
+- [`vector_store`](https://ian-flores.github.io/securecontext/reference/vector_store.md)
+  : Vector Store
+
+## Knowledge Store
+
+- [`knowledge_store`](https://ian-flores.github.io/securecontext/reference/knowledge_store.md)
+  : Knowledge Store
+
+## Retrieval
+
+- [`retriever()`](https://ian-flores.github.io/securecontext/reference/retriever.md)
+  : Create a retriever
+- [`retrieve()`](https://ian-flores.github.io/securecontext/reference/retrieve.md)
+  : Retrieve relevant chunks
+- [`add_documents()`](https://ian-flores.github.io/securecontext/reference/add_documents.md)
+  : Add documents to a retriever
+
+## Context Building
+
+- [`context_builder()`](https://ian-flores.github.io/securecontext/reference/context_builder.md)
+  : Create a context builder
+- [`cb_add()`](https://ian-flores.github.io/securecontext/reference/cb_add.md)
+  : Add content to a context builder
+- [`cb_build()`](https://ian-flores.github.io/securecontext/reference/cb_build.md)
+  : Build the context string
+- [`cb_reset()`](https://ian-flores.github.io/securecontext/reference/cb_reset.md)
+  : Reset a context builder
+
+## Token Counting
+
+- [`count_tokens()`](https://ian-flores.github.io/securecontext/reference/count_tokens.md)
+  : Count tokens in text
+- [`estimate_tokens()`](https://ian-flores.github.io/securecontext/reference/estimate_tokens.md)
+  : Estimate token count
+
+## Integration
+
+- [`as_orchestr_memory()`](https://ian-flores.github.io/securecontext/reference/as_orchestr_memory.md)
+  : Wrap knowledge store as orchestr-compatible memory
+- [`context_for_chat()`](https://ian-flores.github.io/securecontext/reference/context_for_chat.md)
+  : Build context for LLM chat
+
+# Articles
+
+### All vignettes
+
+- [Getting Started with
+  securecontext](https://ian-flores.github.io/securecontext/articles/securecontext.md):

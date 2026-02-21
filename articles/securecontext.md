@@ -1,0 +1,96 @@
+# Getting Started with securecontext
+
+securecontext provides memory, knowledge persistence, RAG retrieval, and
+token-aware context management for R LLM agents.
+
+## Documents and Chunking
+
+Create documents and split them into chunks:
+
+``` r
+library(securecontext)
+
+doc <- document(
+  "R is a language for statistical computing. It has many packages for data
+analysis. The tidyverse is a popular collection of packages.",
+  metadata = list(source = "intro")
+)
+
+# Different chunking strategies
+chunks_sent <- chunk_text(doc$text, strategy = "sentence")
+chunks_para <- chunk_text(doc$text, strategy = "paragraph")
+chunks_rec  <- chunk_text(doc$text, strategy = "recursive", max_size = 50)
+```
+
+## Embeddings and Vector Search
+
+Build TF-IDF embeddings locally (no API needed):
+
+``` r
+corpus <- c(
+  "R is great for statistics and data analysis.",
+  "Python excels at machine learning and deep learning.",
+  "Julia is fast for numerical computing."
+)
+
+embedder <- embed_tfidf(corpus)
+vs <- vector_store$new(dims = embedder$dims)
+
+# Add documents
+docs <- lapply(corpus, document)
+ret <- retriever(vs, embedder)
+add_documents(ret, docs)
+
+# Search
+results <- retrieve(ret, "statistical computing", k = 2)
+print(results)
+```
+
+## Knowledge Store
+
+Persistent key-value storage backed by JSONL:
+
+``` r
+ks <- knowledge_store$new(path = tempfile(fileext = ".jsonl"))
+
+ks$set("user.name", "Alice")
+ks$set("user.preferences", list(theme = "dark", lang = "R"))
+
+ks$get("user.name")
+ks$search("^user")
+```
+
+## Context Builder
+
+Assemble token-limited context with priorities:
+
+``` r
+cb <- context_builder(max_tokens = 500)
+cb <- cb_add(cb, "System instructions go here.", priority = 10, label = "system")
+cb <- cb_add(cb, "Retrieved context from documents.", priority = 5, label = "context")
+cb <- cb_add(cb, "Chat history summary.", priority = 3, label = "history")
+
+result <- cb_build(cb)
+cat(result$context)
+result$included
+result$excluded
+```
+
+## Integration
+
+Use
+[`context_for_chat()`](https://ian-flores.github.io/securecontext/reference/context_for_chat.md)
+to combine retrieval and context building:
+
+``` r
+result <- context_for_chat(ret, "statistics", max_tokens = 2000)
+cat(result$context)
+```
+
+Wrap a knowledge store for orchestr:
+
+``` r
+mem <- as_orchestr_memory(ks)
+mem$set("key", "value")
+mem$get("key")
+```
