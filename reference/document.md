@@ -32,7 +32,7 @@ A `securecontext_document` object.
 doc <- document("Hello world", metadata = list(source = "test"))
 doc
 #> <securecontext_document>
-#>   id: doc_1ea7436c156f 
+#>   id: doc_1b7a3c510ee2 
 #>   chars: 11 
 #>   metadata: source 
 #>   text: Hello world 
