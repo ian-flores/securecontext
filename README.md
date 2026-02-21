@@ -1,5 +1,8 @@
 # securecontext
 
+> [!CAUTION]
+> **Alpha software.** This package is part of a broader effort by [Ian Flores Siaca](https://github.com/ian-flores) to develop proper AI infrastructure for the R ecosystem. It is under active development and should **not** be used in production until an official release is published. APIs may change without notice.
+
 Memory, knowledge persistence, RAG retrieval, and context management for R LLM agents.
 
 ## Installation
