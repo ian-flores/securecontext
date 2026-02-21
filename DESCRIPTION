@@ -8,7 +8,8 @@ Description: Provides memory, knowledge persistence, RAG retrieval, and
     document chunking, TF-IDF embeddings, vector search, persistent
     key-value knowledge stores, and priority-based context assembly.
 License: MIT + file LICENSE
-URL: https://github.com/ian-flores/securecontext
+URL: https://github.com/ian-flores/securecontext,
+    https://ian-flores.github.io/securecontext/
 BugReports: https://github.com/ian-flores/securecontext/issues
 Depends:
     R (>= 4.0.0)
