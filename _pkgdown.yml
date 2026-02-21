@@ -1,0 +1,55 @@
+url: https://ian-flores.github.io/securecontext/
+
+template:
+  bootstrap: 5
+
+reference:
+  - title: Documents
+    contents:
+      - document
+      - is_document
+
+  - title: Chunking
+    contents:
+      - chunk_text
+      - chunk_fixed
+      - chunk_sentence
+      - chunk_paragraph
+      - chunk_recursive
+
+  - title: Embeddings
+    contents:
+      - new_embedder
+      - embed_tfidf
+      - embed_texts
+
+  - title: Vector Store
+    contents:
+      - vector_store
+
+  - title: Knowledge Store
+    contents:
+      - knowledge_store
+
+  - title: Retrieval
+    contents:
+      - retriever
+      - retrieve
+      - add_documents
+
+  - title: Context Building
+    contents:
+      - context_builder
+      - cb_add
+      - cb_build
+      - cb_reset
+
+  - title: Token Counting
+    contents:
+      - count_tokens
+      - estimate_tokens
+
+  - title: Integration
+    contents:
+      - as_orchestr_memory
+      - context_for_chat

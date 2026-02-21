@@ -1,0 +1,31 @@
+Package: securecontext
+Title: Memory, Knowledge Persistence, and Context Management for R LLM Agents
+Version: 0.1.0
+Authors@R:
+    person("Ian", "Flores Siaca", , "iflores.siaca@hey.com", role = c("aut", "cre"))
+Description: Provides memory, knowledge persistence, RAG retrieval, and
+    token-aware context window management for R LLM agents. Includes
+    document chunking, TF-IDF embeddings, vector search, persistent
+    key-value knowledge stores, and priority-based context assembly.
+License: MIT + file LICENSE
+URL: https://github.com/ian-flores/securecontext
+BugReports: https://github.com/ian-flores/securecontext/issues
+Depends:
+    R (>= 4.0.0)
+Imports:
+    cli (>= 3.0.0),
+    jsonlite,
+    R6,
+    rlang (>= 1.0.0)
+Suggests:
+    ellmer,
+    knitr,
+    orchestr,
+    rmarkdown,
+    testthat (>= 3.0.0),
+    withr
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3

@@ -1,0 +1,9 @@
+^.*\.Rproj$
+^\.Rproj\.user$
+^LICENSE\.md$
+^README\.md$
+^CLAUDE\.md$
+^_pkgdown\.yml$
+^\.github$
+^\.gitignore$
+^vignettes/.*\.html$
