@@ -1,0 +1,185 @@
+---
+title: "Token-Aware Context Building"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Token-Aware Context Building}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = FALSE
+)
+```
+
+## Why Context Building Matters
+
+LLMs have finite context windows. A typical model accepts between 4,000 and
+128,000 tokens, and every token you spend on context is a token you cannot
+spend on the model's response. When building RAG applications, you often have
+more retrieved content than fits in the window -- system prompts, retrieved
+chunks, conversation history, and user instructions all compete for space.
+
+Naive approaches (concatenate everything, hope it fits) fail in predictable
+ways: either the prompt is truncated silently, or the model ignores information
+buried in the middle of a long context. securecontext's `context_builder()`
+solves this with a **priority-based token budget** system that gives you
+explicit control over what gets included and transparent reporting on what
+gets dropped.
+
+## How the Context Builder Works
+
+The builder follows a simple algorithm:
+
+```
+                    +------------------+
+                    | Set token budget |
+                    | (max_tokens)     |
+                    +--------+---------+
+                             |
+                    +--------v---------+
+                    | Sort items by    |
+                    | priority (desc)  |
+                    +--------+---------+
+                             |
+                +------------v------------+
+                | For each item (highest  |
+                | priority first):        |
+                |                         |
+                |  Estimate token count   |
+                |         |               |
+                |    Fits in budget?       |
+                |    /           \         |
+                |  YES           NO       |
+                |   |             |        |
+                | Include      Exclude    |
+                | (deduct      (record    |
+                |  tokens)      label)    |
+                +------------+------------+
+                             |
+                    +--------v---------+
+                    | Return:          |
+                    | - context string |
+                    | - included list  |
+                    | - excluded list  |
+                    | - total_tokens   |
+                    +------------------+
+```
+
+Items with the highest priority numbers are included first. When the remaining
+budget cannot accommodate the next item, that item (and all lower-priority
+items) are excluded. The builder reports both lists, so you always know exactly
+what the LLM will see and what it will not.
+
+## Basic Usage
+
+Create a builder with a token budget, add content with priorities, and build
+the final context string.
+
+```{r}
+library(securecontext)
+
+cb <- context_builder(max_tokens = 100)
+
+# Add content with different priorities (higher = included first)
+cb <- cb_add(cb, "You are a helpful assistant.", priority = 10, label = "system")
+cb <- cb_add(cb,
+  "R is great for statistics and data visualization.",
+  priority = 5, label = "retrieved_chunk_1"
+)
+cb <- cb_add(cb,
+  "Python is popular for machine learning and web development.",
+  priority = 4, label = "retrieved_chunk_2"
+)
+cb <- cb_add(cb,
+  "Julia offers high performance for numerical computing workloads.",
+  priority = 3, label = "retrieved_chunk_3"
+)
+
+result <- cb_build(cb)
+
+cat("Assembled context:\n")
+cat(result$context, "\n\n")
+cat("Included:", paste(result$included, collapse = ", "), "\n")
+cat("Excluded:", paste(result$excluded, collapse = ", "), "\n")
+cat("Total tokens:", result$total_tokens, "\n")
+```
+
+With a 100-token budget, the system prompt (priority 10) is always included.
+Retrieved chunks are then packed in priority order until the budget is
+exhausted. The `$excluded` field tells you exactly which chunks were dropped,
+which is valuable for debugging and logging in production agents.
+
+## Priority Design Patterns
+
+Choosing priority values is a design decision that depends on your application.
+Here are common patterns:
+
+**Fixed tiers** assign priorities by content type:
+
+| Priority | Content type        | Rationale                              |
+|---------:|:--------------------|:---------------------------------------|
+| 10       | System prompt       | Defines agent behavior, always needed  |
+| 7        | User's question     | The query must be visible to the model |
+| 5        | Retrieved chunks    | Supporting evidence, best-effort       |
+| 3        | Conversation history| Helpful but expendable                 |
+| 1        | Disclaimers/footers | Include only if space permits           |
+
+**Dynamic priorities** use retrieval scores directly. When you retrieve chunks
+with cosine similarity scores, you can pass those scores as priorities so the
+most relevant chunks are included first:
+
+```{r}
+cb <- context_builder(max_tokens = 500)
+
+# System prompt gets highest priority -- always included
+cb <- cb_add(cb, "You are an R expert.", priority = 10, label = "system")
+
+# Retrieved chunks get decreasing priority by relevance score
+hits <- retrieve(ret, "statistical models", k = 5)
+for (i in seq_len(nrow(hits))) {
+  chunk_text <- hits$id[i]  # or look up the original text
+  cb <- cb_add(cb, chunk_text, priority = hits$score[i], label = hits$id[i])
+}
+
+result <- cb_build(cb)
+cat("Included:", paste(result$included, collapse = ", "), "\n")
+cat("Excluded:", paste(result$excluded, collapse = ", "), "\n")
+cat("Total tokens:", result$total_tokens, "\n")
+```
+
+## Resetting Between Turns
+
+In a multi-turn conversation, you typically rebuild the context for each turn --
+the retrieved chunks change, the conversation history grows, and the system
+prompt may be updated. Use `cb_reset()` to clear all items and reuse the same
+builder without re-specifying the token budget.
+
+```{r}
+cb2 <- cb_reset(cb)
+cb2 <- cb_add(cb2, "New system prompt.", priority = 10, label = "system_v2")
+result2 <- cb_build(cb2)
+cat("After reset -- included:", paste(result2$included, collapse = ", "), "\n")
+```
+
+This avoids the overhead of creating a new builder object each turn and makes
+intent clear: this is a fresh context assembly for a new turn.
+
+## The `context_for_chat()` Shortcut
+
+For the common case of "retrieve chunks and build a context string,"
+`context_for_chat()` combines both steps in a single call. It retrieves the
+top-k chunks from a retriever and packs them into a token-limited string.
+
+```{r}
+result <- context_for_chat(ret, "statistics", max_tokens = 2000)
+cat(result$context)
+```
+
+Under the hood, this creates a context builder, adds each retrieved chunk with
+its similarity score as the priority, and returns the built result. It is a
+convenience wrapper -- when you need more control (e.g., adding a system prompt
+or conversation history alongside retrieved chunks), use the builder directly.

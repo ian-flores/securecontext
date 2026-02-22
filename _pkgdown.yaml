@@ -8,6 +8,7 @@ articles:
     contents:
       - securecontext
       - retrieval-workflows
+      - context-building
       - orchestr-integration
 
 reference:
