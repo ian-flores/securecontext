@@ -1,0 +1,297 @@
+---
+title: "Retrieval Workflows"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Retrieval Workflows}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This vignette walks through a complete retrieval-augmented generation (RAG)
+workflow using securecontext. Every step -- document creation, chunking,
+embedding, vector search, knowledge storage, and context assembly -- runs
+locally with no external API calls.
+
+```{r setup}
+library(securecontext)
+```
+
+## Step 1: Create Documents
+
+A `document()` wraps raw text with metadata and an auto-generated identifier.
+Documents are S7 objects, so properties are accessed with `@`.
+
+```{r documents}
+doc_r <- document(
+  "R is a programming language for statistical computing and graphics.
+It is widely used among statisticians and data scientists. R provides
+a wide variety of statistical and graphical techniques, including
+linear and nonlinear modelling, classical statistical tests, time-series
+analysis, classification, and clustering.",
+  metadata = list(source = "intro", topic = "R")
+)
+
+doc_python <- document(
+  "Python is a high-level, general-purpose programming language.
+Its design philosophy emphasizes code readability. Python supports
+multiple programming paradigms, including structured, object-oriented,
+and functional programming. It is often used for machine learning,
+web development, and data analysis.",
+  metadata = list(source = "intro", topic = "Python")
+)
+
+doc_julia <- document(
+  "Julia is a high-level, high-performance programming language for
+technical computing. It was designed for numerical analysis and
+computational science. Julia features optional typing, multiple dispatch,
+and good performance approaching that of statically-typed languages
+like C and Fortran.",
+  metadata = list(source = "intro", topic = "Julia")
+)
+
+# S7 property access with @
+doc_r@id
+doc_r@metadata
+```
+
+## Step 2: Chunk Text
+
+Chunking splits long text into smaller pieces suitable for embedding and
+retrieval. securecontext offers four strategies:
+
+| Strategy      | How it splits                           |
+|:------------- |:--------------------------------------- |
+| `"sentence"`  | On sentence boundaries (`.` + space)    |
+| `"paragraph"` | On double newlines                      |
+| `"fixed"`     | Fixed character width with overlap       |
+| `"recursive"` | Hierarchical separators (LangChain-style)|
+
+```{r chunking}
+# Sentence-level chunking
+sentences <- chunk_text(doc_r@text, strategy = "sentence")
+cat("Sentence chunks:", length(sentences), "\n")
+sentences
+
+# Recursive chunking with a small max_size to demonstrate splitting
+small_chunks <- chunk_text(doc_r@text, strategy = "recursive", max_size = 120)
+cat("\nRecursive chunks (max 120 chars):", length(small_chunks), "\n")
+small_chunks
+```
+
+Fixed-size chunking is useful when you need consistent chunk lengths, for
+example when working with models that expect uniform input sizes:
+
+```{r fixed-chunking}
+long_text <- paste(
+  "The tidyverse is a collection of R packages designed for data science.",
+  "It includes ggplot2 for visualization, dplyr for data manipulation,",
+  "tidyr for data tidying, readr for reading data, purrr for functional",
+  "programming, tibble for modern data frames, stringr for string",
+  "manipulation, and forcats for factor handling.",
+  "All tidyverse packages share an underlying design philosophy,",
+  "grammar, and data structures."
+)
+
+fixed_chunks <- chunk_fixed(long_text, size = 100, overlap = 20)
+cat("Fixed chunks (size=100, overlap=20):", length(fixed_chunks), "\n\n")
+for (i in seq_along(fixed_chunks)) {
+  cat(sprintf("Chunk %d (%d chars): %s\n\n", i, nchar(fixed_chunks[i]), fixed_chunks[i]))
+}
+```
+
+## Step 3: Build a TF-IDF Embedder
+
+`embed_tfidf()` builds a vocabulary from a corpus and returns an embedder
+that can project new texts into that TF-IDF space. Everything runs locally --
+no API keys required.
+
+```{r embedder}
+# Gather all document texts as the training corpus
+corpus <- c(doc_r@text, doc_python@text, doc_julia@text)
+
+embedder <- embed_tfidf(corpus)
+
+# The embedder is an S7 object; dims equals the vocabulary size
+cat("Embedding dimensions:", embedder@dims, "\n")
+
+# Embed a new query
+query_matrix <- embed_texts(embedder, "statistical analysis in R")
+cat("Query embedding shape:", nrow(query_matrix), "x", ncol(query_matrix), "\n")
+```
+
+## Step 4: Vector Store
+
+The `vector_store` is an R6 class providing in-memory cosine-similarity search
+with optional RDS persistence. Since it is R6, use `$` for method access.
+
+```{r vector-store}
+vs <- vector_store$new(dims = embedder@dims)
+
+# Embed and store each document manually
+ids <- c("r", "python", "julia")
+embeddings <- embed_texts(embedder, corpus)
+vs$add(ids, embeddings)
+
+cat("Store size:", vs$size(), "vectors\n")
+
+# Search for the closest match to a query
+query_emb <- embed_texts(embedder, "data science and statistics")
+results <- vs$search(query_emb, k = 3)
+print(results)
+```
+
+Persistence is straightforward with `$save()` and `$load()`:
+
+```{r persistence}
+tmp <- tempfile(fileext = ".rds")
+vs$save(tmp)
+
+vs2 <- vector_store$new(dims = embedder@dims)
+vs2$load(tmp)
+cat("Loaded store size:", vs2$size(), "\n")
+
+# Clean up
+unlink(tmp)
+```
+
+## Step 5: Retriever -- the High-Level Interface
+
+A `retriever()` combines a vector store and an embedder into a single object.
+Use `add_documents()` to chunk, embed, and store documents in one call, then
+`retrieve()` to search.
+
+```{r retriever}
+# Fresh store for the retriever
+vs_ret <- vector_store$new(dims = embedder@dims)
+ret <- retriever(vs_ret, embedder)
+
+# add_documents handles chunking + embedding internally
+docs <- list(doc_r, doc_python, doc_julia)
+add_documents(ret, docs, chunk_strategy = "sentence")
+
+cat("Chunks in store:", vs_ret$size(), "\n\n")
+
+# Retrieve the top 3 chunks for a query
+hits <- retrieve(ret, "machine learning", k = 3)
+print(hits)
+```
+
+The returned data frame contains chunk IDs and cosine similarity scores. Higher
+scores indicate greater relevance.
+
+## Step 6: Knowledge Store
+
+The `knowledge_store` is an R6 class providing persistent key-value storage
+backed by JSONL. It is useful for storing agent memory, user preferences, or
+any structured data that should survive across sessions.
+
+```{r knowledge-store}
+ks <- knowledge_store$new(path = tempfile(fileext = ".jsonl"))
+
+# Store some facts
+ks$set("lang.r", list(type = "statistical", year = 1993))
+ks$set("lang.python", list(type = "general-purpose", year = 1991))
+ks$set("lang.julia", list(type = "numerical", year = 2012))
+ks$set("user.preference", "R")
+
+cat("Total entries:", ks$size(), "\n")
+
+# Retrieve a value
+ks$get("lang.r")
+
+# Search keys by regex
+ks$search("^lang")
+
+# List all keys
+ks$list()
+
+# Clean up
+unlink(ks$.__enclos_env__$private$.path)
+```
+
+## Step 7: Context Builder
+
+The `context_builder()` assembles a token-limited context string from multiple
+sources, prioritizing the most important content. This is the final step before
+sending context to an LLM.
+
+```{r context-builder}
+cb <- context_builder(max_tokens = 100)
+
+# Add content with different priorities (higher = included first)
+cb <- cb_add(cb, "You are a helpful assistant.", priority = 10, label = "system")
+cb <- cb_add(cb,
+  "R is great for statistics and data visualization.",
+  priority = 5, label = "retrieved_chunk_1"
+)
+cb <- cb_add(cb,
+  "Python is popular for machine learning and web development.",
+  priority = 4, label = "retrieved_chunk_2"
+)
+cb <- cb_add(cb,
+  "Julia offers high performance for numerical computing workloads.",
+  priority = 3, label = "retrieved_chunk_3"
+)
+
+result <- cb_build(cb)
+
+cat("Assembled context:\n")
+cat(result$context, "\n\n")
+cat("Included:", paste(result$included, collapse = ", "), "\n")
+cat("Excluded:", paste(result$excluded, collapse = ", "), "\n")
+cat("Total tokens:", result$total_tokens, "\n")
+```
+
+The builder processes items in priority order and stops adding when the token
+budget is exhausted. Items that do not fit are reported in `$excluded`, making
+it easy to log what was dropped.
+
+Use `cb_reset()` to clear all items and reuse the same builder with a new turn
+of conversation:
+
+```{r context-reset}
+cb2 <- cb_reset(cb)
+cb2 <- cb_add(cb2, "New system prompt.", priority = 10, label = "system_v2")
+result2 <- cb_build(cb2)
+cat("After reset -- included:", paste(result2$included, collapse = ", "), "\n")
+```
+
+## Full Pipeline: Retrieve and Build Context
+
+`context_for_chat()` combines retrieval and context building in a single call.
+Given a retriever and a query, it retrieves the top-k chunks and packs them
+into a token-limited context string.
+
+```{r full-pipeline}
+context_result <- context_for_chat(ret, "statistical computing", max_tokens = 2000, k = 5)
+
+cat("Context for LLM:\n")
+cat(context_result$context, "\n\n")
+cat("Included chunks:", length(context_result$included), "\n")
+cat("Total tokens:", context_result$total_tokens, "\n")
+```
+
+This is the typical integration point for an agent: retrieve relevant
+information, assemble a context window, and pass it to an LLM provider (via
+ellmer, httr2, or any other HTTP client).
+
+## Summary
+
+The securecontext retrieval pipeline follows these steps:
+
+1. **`document()`** -- wrap text with metadata
+2. **`chunk_text()`** -- split into retrieval units
+3. **`embed_tfidf()`** -- build a local embedder from a corpus
+4. **`vector_store$new()`** -- store and search embeddings
+5. **`retriever()`** + **`add_documents()`** -- high-level ingest
+6. **`retrieve()`** -- semantic search
+7. **`knowledge_store$new()`** -- persistent key-value memory
+8. **`context_builder()`** + **`cb_add()`** + **`cb_build()`** -- token-aware assembly
+9. **`context_for_chat()`** -- one-call retrieve-and-build

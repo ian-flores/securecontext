@@ -7,6 +7,11 @@
 #' @return A list with `get` and `set` functions compatible with orchestr
 #'   memory interface.
 #' @export
+#' @examples
+#' ks <- knowledge_store$new()
+#' mem <- as_orchestr_memory(ks)
+#' mem$set("key", "value")
+#' mem$get("key")
 as_orchestr_memory <- function(ks) {
   if (!inherits(ks, "knowledge_store")) {
     cli_abort("{.arg ks} must be a {.cls knowledge_store}.")
@@ -28,8 +33,15 @@ as_orchestr_memory <- function(ks) {
 #' @param k Number of chunks to retrieve.
 #' @return A list with `context`, `included`, `excluded`, and `total_tokens`.
 #' @export
+#' @examples
+#' emb <- embed_tfidf(c("cat sat on mat", "dog ran in park"))
+#' vs <- vector_store$new(dims = emb@dims)
+#' ret <- retriever(vs, emb)
+#' add_documents(ret, document("The cat sat on the mat."))
+#' result <- context_for_chat(ret, "cat", max_tokens = 100, k = 2)
+#' result$context
 context_for_chat <- function(ret, query, max_tokens = 4000L, k = 10L) {
-  if (!inherits(ret, "securecontext_retriever")) {
+  if (!S7_inherits(ret, securecontext_retriever)) {
     cli_abort("{.arg ret} must be a {.cls securecontext_retriever}.")
   }
   results <- retrieve(ret, query, k = k)
@@ -40,8 +52,8 @@ context_for_chat <- function(ret, query, max_tokens = 4000L, k = 10L) {
       id <- results$id[i]
       score <- results$score[i]
       # Try to get chunk_text from store metadata
-      store_meta <- ret$store$.__enclos_env__$private$.metadata
-      idx <- which(ret$store$.__enclos_env__$private$.ids == id)
+      store_meta <- ret@store$.__enclos_env__$private$.metadata
+      idx <- which(ret@store$.__enclos_env__$private$.ids == id)
       chunk_text_val <- if (length(idx) > 0L && !is.null(store_meta[[idx]]$chunk_text)) {
         store_meta[[idx]]$chunk_text
       } else {

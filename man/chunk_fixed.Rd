@@ -20,3 +20,6 @@ Character vector of chunks.
 Splits text into chunks of approximately \code{size} characters with optional
 overlap.
 }
+\examples{
+chunk_fixed(paste(rep("word", 200), collapse = " "), size = 100, overlap = 10)
+}

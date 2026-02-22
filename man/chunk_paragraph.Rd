@@ -15,3 +15,6 @@ Character vector of paragraph chunks.
 \description{
 Splits text on double newlines.
 }
+\examples{
+chunk_paragraph("First paragraph.\n\nSecond paragraph.\n\nThird.")
+}

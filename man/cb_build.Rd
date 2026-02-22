@@ -18,3 +18,9 @@ A list with elements \code{context} (assembled string), \code{included}
 Assembles context by including highest-priority items first until the token
 limit is reached.
 }
+\examples{
+cb <- context_builder(max_tokens = 100)
+cb <- cb_add(cb, "Important info", priority = 10)
+result <- cb_build(cb)
+result$context
+}

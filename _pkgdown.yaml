@@ -3,6 +3,12 @@ url: https://ian-flores.github.io/securecontext/
 template:
   bootstrap: 5
 
+articles:
+  - title: Guides
+    contents:
+      - securecontext
+      - retrieval-workflows
+
 reference:
   - title: Documents
     contents:

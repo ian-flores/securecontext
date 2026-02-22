@@ -21,3 +21,8 @@ Updated builder.
 \description{
 Add content to a context builder
 }
+\examples{
+cb <- context_builder(max_tokens = 100)
+cb <- cb_add(cb, "High priority text", priority = 10, label = "important")
+cb <- cb_add(cb, "Low priority text", priority = 1, label = "filler")
+}

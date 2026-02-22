@@ -19,3 +19,10 @@ Data frame with columns \code{id}, \code{score}.
 \description{
 Embeds the query, searches the vector store, and returns results.
 }
+\examples{
+emb <- embed_tfidf(c("cat sat on mat", "dog ran in park"))
+vs <- vector_store$new(dims = emb@dims)
+ret <- retriever(vs, emb)
+add_documents(ret, document("The cat sat on the mat."))
+retrieve(ret, "cat", k = 1)
+}

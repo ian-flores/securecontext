@@ -15,3 +15,8 @@ Logical.
 \description{
 Test if object is a document
 }
+\examples{
+doc <- document("Hello world")
+is_document(doc)
+is_document("not a doc")
+}

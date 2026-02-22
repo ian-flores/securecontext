@@ -5,7 +5,7 @@ test_that("retriever end-to-end", {
     "Fish swim in the ocean."
   )
   emb <- embed_tfidf(corpus)
-  vs <- vector_store$new(dims = emb$dims)
+  vs <- vector_store$new(dims = emb@dims)
   ret <- retriever(vs, emb)
 
   docs <- lapply(corpus, function(txt) document(txt))
@@ -28,7 +28,7 @@ test_that("retrieve() validates input", {
 
 test_that("add_documents() accepts single document", {
   emb <- embed_tfidf(c("hello world", "foo bar"))
-  vs <- vector_store$new(dims = emb$dims)
+  vs <- vector_store$new(dims = emb@dims)
   ret <- retriever(vs, emb)
 
   doc <- document("hello world test doc")

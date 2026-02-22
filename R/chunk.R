@@ -33,6 +33,8 @@ chunk_text <- function(text, strategy = c("fixed", "sentence", "paragraph", "rec
 #' @param overlap Number of overlap characters between consecutive chunks.
 #' @return Character vector of chunks.
 #' @export
+#' @examples
+#' chunk_fixed(paste(rep("word", 200), collapse = " "), size = 100, overlap = 10)
 chunk_fixed <- function(text, size = 500L, overlap = 50L) {
   if (!is.character(text) || length(text) != 1L) {
     cli_abort("{.arg text} must be a single character string.")
@@ -65,6 +67,8 @@ chunk_fixed <- function(text, size = 500L, overlap = 50L) {
 #' @param text Character string to chunk.
 #' @return Character vector of sentence chunks.
 #' @export
+#' @examples
+#' chunk_sentence("First sentence. Second sentence. Third one.")
 chunk_sentence <- function(text) {
   if (!is.character(text) || length(text) != 1L) {
     cli_abort("{.arg text} must be a single character string.")
@@ -82,6 +86,8 @@ chunk_sentence <- function(text) {
 #' @param text Character string to chunk.
 #' @return Character vector of paragraph chunks.
 #' @export
+#' @examples
+#' chunk_paragraph("First paragraph.\n\nSecond paragraph.\n\nThird.")
 chunk_paragraph <- function(text) {
   if (!is.character(text) || length(text) != 1L) {
     cli_abort("{.arg text} must be a single character string.")
@@ -102,6 +108,9 @@ chunk_paragraph <- function(text) {
 #' @param separators Character vector of separators to try in order.
 #' @return Character vector of chunks.
 #' @export
+#' @examples
+#' long_text <- paste(rep("This is a sentence.", 20), collapse = " ")
+#' chunk_recursive(long_text, max_size = 80)
 chunk_recursive <- function(text, max_size = 500L, separators = c("\n\n", "\n", ". ", " ")) {
   if (!is.character(text) || length(text) != 1L) {
     cli_abort("{.arg text} must be a single character string.")

@@ -11,6 +11,13 @@ Vector Store
 \details{
 In-memory vector store with cosine similarity search and RDS persistence.
 }
+\examples{
+vs <- vector_store$new(dims = 3L)
+vs$add("id1", matrix(c(1, 0, 0), nrow = 1))
+vs$add("id2", matrix(c(0, 1, 0), nrow = 1))
+vs$search(c(1, 0, 0), k = 1)
+vs$size()
+}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{

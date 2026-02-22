@@ -12,8 +12,13 @@ embed_texts(embedder, texts)
 \item{texts}{Character vector of texts to embed.}
 }
 \value{
-Numeric matrix with \code{length(texts)} rows and \code{embedder$dims} columns.
+Numeric matrix with \code{length(texts)} rows and \code{embedder@dims} columns.
 }
 \description{
 Embed texts using an embedder
+}
+\examples{
+emb <- embed_tfidf(c("the cat sat", "the dog ran"))
+mat <- embed_texts(emb, c("cat sat", "dog ran"))
+nrow(mat)
 }

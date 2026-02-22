@@ -15,3 +15,9 @@ Reset builder.
 \description{
 Removes all added content.
 }
+\examples{
+cb <- context_builder(max_tokens = 100)
+cb <- cb_add(cb, "some text")
+cb <- cb_reset(cb)
+length(cb@items)
+}

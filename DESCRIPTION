@@ -8,16 +8,17 @@ Description: Provides memory, knowledge persistence, RAG retrieval, and
     document chunking, TF-IDF embeddings, vector search, persistent
     key-value knowledge stores, and priority-based context assembly.
 License: MIT + file LICENSE
-URL: https://github.com/ian-flores/securecontext,
-    https://ian-flores.github.io/securecontext/
+URL: https://ian-flores.github.io/securecontext/,
+    https://github.com/ian-flores/securecontext
 BugReports: https://github.com/ian-flores/securecontext/issues
 Depends:
-    R (>= 4.0.0)
+    R (>= 4.1.0)
 Imports:
     cli (>= 3.0.0),
     jsonlite,
     R6,
-    rlang (>= 1.0.0)
+    rlang (>= 1.0.0),
+    S7
 Suggests:
     ellmer,
     knitr,
@@ -31,4 +32,6 @@ VignetteBuilder: knitr
 Config/testthat/edition: 3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
+Language: en-US
+Config/Needs/website: pkgdown
 RoxygenNote: 7.3.3

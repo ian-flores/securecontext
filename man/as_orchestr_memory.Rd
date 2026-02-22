@@ -17,3 +17,9 @@ memory interface.
 If the orchestr package is available, wraps a \link{knowledge_store} so it can
 be used in orchestr agent graphs.
 }
+\examples{
+ks <- knowledge_store$new()
+mem <- as_orchestr_memory(ks)
+mem$set("key", "value")
+mem$get("key")
+}

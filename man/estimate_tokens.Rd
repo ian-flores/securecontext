@@ -15,3 +15,6 @@ Numeric token count estimate.
 \description{
 Alias for \code{\link[=count_tokens]{count_tokens()}} with the default \code{"words"} method.
 }
+\examples{
+estimate_tokens("Hello world, this is a test.")
+}

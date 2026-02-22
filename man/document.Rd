@@ -17,7 +17,7 @@ document(text, metadata = list(), id = NULL)
 A \code{securecontext_document} object.
 }
 \description{
-Constructs an S3 object representing a text document with metadata.
+Constructs an S7 object representing a text document with metadata.
 }
 \examples{
 doc <- document("Hello world", metadata = list(source = "test"))

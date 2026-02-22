@@ -1,3 +1,18 @@
+#' S7 class for securecontext embedders
+#'
+#' @param embed_fn A function taking a character vector and returning a numeric
+#'   matrix.
+#' @param dims Integer, the dimensionality of the embedding space.
+#' @name securecontext_embedder
+#' @examples
+#' emb <- embed_tfidf(c("hello world", "goodbye world"))
+#' emb@dims
+#' @export
+securecontext_embedder <- new_class("securecontext_embedder", properties = list(
+  embed_fn = class_function,
+  dims = class_integer
+))
+
 #' Create an embedder
 #'
 #' Constructs an embedder object from a function and dimensionality.
@@ -7,15 +22,17 @@
 #' @param dims Integer, the dimensionality of the embedding space.
 #' @return A `securecontext_embedder` object.
 #' @export
+#' @examples
+#' # Create a simple random embedder
+#' random_embed <- function(texts) matrix(runif(length(texts) * 3), ncol = 3)
+#' emb <- new_embedder(random_embed, dims = 3L)
+#' emb@dims
 new_embedder <- function(embed_fn, dims) {
   if (!is.function(embed_fn)) {
     cli_abort("{.arg embed_fn} must be a function.")
   }
   dims <- as.integer(dims)
-  structure(
-    list(embed_fn = embed_fn, dims = dims),
-    class = "securecontext_embedder"
-  )
+  securecontext_embedder(embed_fn = embed_fn, dims = dims)
 }
 
 #' Create a TF-IDF embedder
@@ -89,14 +106,18 @@ embed_tfidf <- function(corpus) {
 #'
 #' @param embedder A `securecontext_embedder` object.
 #' @param texts Character vector of texts to embed.
-#' @return Numeric matrix with `length(texts)` rows and `embedder$dims` columns.
+#' @return Numeric matrix with `length(texts)` rows and `embedder@@dims` columns.
 #' @export
+#' @examples
+#' emb <- embed_tfidf(c("the cat sat", "the dog ran"))
+#' mat <- embed_texts(emb, c("cat sat", "dog ran"))
+#' nrow(mat)
 embed_texts <- function(embedder, texts) {
-  if (!inherits(embedder, "securecontext_embedder")) {
+  if (!S7_inherits(embedder, securecontext_embedder)) {
     cli_abort("{.arg embedder} must be a {.cls securecontext_embedder}.")
   }
   if (!is.character(texts)) {
     cli_abort("{.arg texts} must be a character vector.")
   }
-  embedder$embed_fn(texts)
+  embedder@embed_fn(texts)
 }

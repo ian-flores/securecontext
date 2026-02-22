@@ -18,7 +18,7 @@ test_that("as_orchestr_memory() validates input", {
 test_that("context_for_chat() works end to end", {
   corpus <- c("R is a language for statistics.", "Python is popular for ML.")
   emb <- embed_tfidf(corpus)
-  vs <- vector_store$new(dims = emb$dims)
+  vs <- vector_store$new(dims = emb@dims)
   ret <- retriever(vs, emb)
 
   docs <- lapply(corpus, function(txt) document(txt))

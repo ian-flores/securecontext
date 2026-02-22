@@ -11,6 +11,7 @@ Provides memory, knowledge persistence, RAG retrieval, and token-aware context w
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://ian-flores.github.io/securecontext/}
   \item \url{https://github.com/ian-flores/securecontext}
   \item Report bugs at \url{https://github.com/ian-flores/securecontext/issues}
 }

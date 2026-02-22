@@ -15,3 +15,6 @@ Character vector of sentence chunks.
 \description{
 Splits text on sentence boundaries (period followed by space or newline).
 }
+\examples{
+chunk_sentence("First sentence. Second sentence. Third one.")
+}

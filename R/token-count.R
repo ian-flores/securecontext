@@ -35,6 +35,8 @@ count_tokens <- function(text, method = c("words", "chars")) {
 #' @inheritParams count_tokens
 #' @return Numeric token count estimate.
 #' @export
+#' @examples
+#' estimate_tokens("Hello world, this is a test.")
 estimate_tokens <- function(text) {
   count_tokens(text, method = "words")
 }

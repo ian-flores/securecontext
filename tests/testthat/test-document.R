@@ -1,20 +1,20 @@
 test_that("document() creates a valid document", {
   doc <- document("hello world", metadata = list(source = "test"))
   expect_true(is_document(doc))
-  expect_equal(doc$text, "hello world")
-  expect_equal(doc$metadata$source, "test")
-  expect_true(nzchar(doc$id))
+  expect_equal(doc@text, "hello world")
+  expect_equal(doc@metadata$source, "test")
+  expect_true(nzchar(doc@id))
 })
 
 test_that("document() auto-generates id", {
   d1 <- document("a")
   d2 <- document("b")
-  expect_false(d1$id == d2$id)
+  expect_false(d1@id == d2@id)
 })
 
 test_that("document() respects explicit id", {
   doc <- document("hi", id = "my_id")
-  expect_equal(doc$id, "my_id")
+  expect_equal(doc@id, "my_id")
 })
 
 test_that("document() rejects non-string text", {

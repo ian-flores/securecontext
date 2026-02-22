@@ -22,3 +22,11 @@ A list with \code{context}, \code{included}, \code{excluded}, and \code{total_to
 Convenience function that retrieves relevant chunks and builds a
 token-limited context string.
 }
+\examples{
+emb <- embed_tfidf(c("cat sat on mat", "dog ran in park"))
+vs <- vector_store$new(dims = emb@dims)
+ret <- retriever(vs, emb)
+add_documents(ret, document("The cat sat on the mat."))
+result <- context_for_chat(ret, "cat", max_tokens = 100, k = 2)
+result$context
+}

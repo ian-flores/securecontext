@@ -1,7 +1,7 @@
 test_that("embed_tfidf() creates a valid embedder", {
   emb <- embed_tfidf(c("the cat sat", "the dog ran", "a fish swam"))
-  expect_s3_class(emb, "securecontext_embedder")
-  expect_true(emb$dims > 0L)
+  expect_true(S7::S7_inherits(emb, securecontext_embedder))
+  expect_true(emb@dims > 0L)
 })
 
 test_that("embed_texts() returns correct dimensions", {
@@ -9,7 +9,7 @@ test_that("embed_texts() returns correct dimensions", {
   emb <- embed_tfidf(corpus)
   mat <- embed_texts(emb, c("hello", "foo"))
   expect_equal(nrow(mat), 2L)
-  expect_equal(ncol(mat), emb$dims)
+  expect_equal(ncol(mat), emb@dims)
 })
 
 test_that("TF-IDF embeddings are normalized", {

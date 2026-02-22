@@ -18,3 +18,9 @@ A \code{securecontext_embedder} object.
 \description{
 Constructs an embedder object from a function and dimensionality.
 }
+\examples{
+# Create a simple random embedder
+random_embed <- function(texts) matrix(runif(length(texts) * 3), ncol = 3)
+emb <- new_embedder(random_embed, dims = 3L)
+emb@dims
+}

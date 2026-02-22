@@ -24,3 +24,7 @@ Character vector of chunks.
 Recursively splits text using a hierarchy of separators, similar to
 LangChain's recursive text splitter.
 }
+\examples{
+long_text <- paste(rep("This is a sentence.", 20), collapse = " ")
+chunk_recursive(long_text, max_size = 80)
+}
