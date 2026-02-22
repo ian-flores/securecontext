@@ -9,6 +9,44 @@
 Memory, knowledge persistence, RAG retrieval, and context management for
 R LLM agents.
 
+## Part of the secure-r-dev Ecosystem
+
+securecontext is part of a 7-package ecosystem for building governed AI
+agents in R:
+
+                        ┌─────────────┐
+                        │   securer    │
+                        └──────┬──────┘
+              ┌────────────────┼───────────────────┐
+              │                │                    │
+       ┌──────▼──────┐  ┌─────▼──────┐  ┌──────────▼──────────┐
+       │ securetools  │  │ secureguard│  │ >>> securecontext <<< │
+       └──────┬───────┘  └─────┬──────┘  └──────────┬──────────┘
+              └────────────────┼───────────────────┘
+                        ┌──────▼───────┐
+                        │   orchestr   │
+                        └──────┬───────┘
+              ┌────────────────┼─────────────────┐
+              │                                  │
+       ┌──────▼──────┐                    ┌──────▼──────┐
+       │ securetrace  │                   │ securebench  │
+       └─────────────┘                    └─────────────┘
+
+securecontext provides the memory and retrieval layer for agents. It
+sits alongside securetools and secureguard in the middle tier, giving
+agents the ability to chunk documents, build TF-IDF embeddings locally,
+and retrieve relevant context for LLM prompts.
+
+| Package                                                      | Role                                                    |
+|--------------------------------------------------------------|---------------------------------------------------------|
+| [securer](https://github.com/ian-flores/securer)             | Sandboxed R execution with tool-call IPC                |
+| [securetools](https://github.com/ian-flores/securetools)     | Pre-built security-hardened tool definitions            |
+| [secureguard](https://github.com/ian-flores/secureguard)     | Input/code/output guardrails (injection, PII, secrets)  |
+| [orchestr](https://github.com/ian-flores/orchestr)           | Graph-based agent orchestration                         |
+| [securecontext](https://github.com/ian-flores/securecontext) | Document chunking, embeddings, RAG retrieval            |
+| [securetrace](https://github.com/ian-flores/securetrace)     | Structured tracing, token/cost accounting, JSONL export |
+| [securebench](https://github.com/ian-flores/securebench)     | Guardrail benchmarking with precision/recall/F1 metrics |
+
 ## Installation
 
 ``` r

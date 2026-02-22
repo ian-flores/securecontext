@@ -170,3 +170,16 @@ The objects of this class are cloneable with this method.
 - `deep`:
 
   Whether to make a deep clone.
+
+## Examples
+
+``` r
+vs <- vector_store$new(dims = 3L)
+vs$add("id1", matrix(c(1, 0, 0), nrow = 1))
+vs$add("id2", matrix(c(0, 1, 0), nrow = 1))
+vs$search(c(1, 0, 0), k = 1)
+#>    id score
+#> 1 id1     1
+vs$size()
+#> [1] 2
+```

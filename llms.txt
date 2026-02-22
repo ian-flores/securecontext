@@ -9,6 +9,44 @@
 Memory, knowledge persistence, RAG retrieval, and context management for
 R LLM agents.
 
+## Part of the secure-r-dev Ecosystem
+
+securecontext is part of a 7-package ecosystem for building governed AI
+agents in R:
+
+                        ┌─────────────┐
+                        │   securer    │
+                        └──────┬──────┘
+              ┌────────────────┼───────────────────┐
+              │                │                    │
+       ┌──────▼──────┐  ┌─────▼──────┐  ┌──────────▼──────────┐
+       │ securetools  │  │ secureguard│  │ >>> securecontext <<< │
+       └──────┬───────┘  └─────┬──────┘  └──────────┬──────────┘
+              └────────────────┼───────────────────┘
+                        ┌──────▼───────┐
+                        │   orchestr   │
+                        └──────┬───────┘
+              ┌────────────────┼─────────────────┐
+              │                                  │
+       ┌──────▼──────┐                    ┌──────▼──────┐
+       │ securetrace  │                   │ securebench  │
+       └─────────────┘                    └─────────────┘
+
+securecontext provides the memory and retrieval layer for agents. It
+sits alongside securetools and secureguard in the middle tier, giving
+agents the ability to chunk documents, build TF-IDF embeddings locally,
+and retrieve relevant context for LLM prompts.
+
+| Package                                                      | Role                                                    |
+|--------------------------------------------------------------|---------------------------------------------------------|
+| [securer](https://github.com/ian-flores/securer)             | Sandboxed R execution with tool-call IPC                |
+| [securetools](https://github.com/ian-flores/securetools)     | Pre-built security-hardened tool definitions            |
+| [secureguard](https://github.com/ian-flores/secureguard)     | Input/code/output guardrails (injection, PII, secrets)  |
+| [orchestr](https://github.com/ian-flores/orchestr)           | Graph-based agent orchestration                         |
+| [securecontext](https://github.com/ian-flores/securecontext) | Document chunking, embeddings, RAG retrieval            |
+| [securetrace](https://github.com/ian-flores/securetrace)     | Structured tracing, token/cost accounting, JSONL export |
+| [securebench](https://github.com/ian-flores/securebench)     | Guardrail benchmarking with precision/recall/F1 metrics |
+
 ## Installation
 
 ``` r
@@ -60,6 +98,8 @@ MIT
 
 - [`document()`](https://ian-flores.github.io/securecontext/reference/document.md)
   : Create a document
+- [`securecontext_document()`](https://ian-flores.github.io/securecontext/reference/securecontext_document.md)
+  : S7 class for securecontext documents
 - [`is_document()`](https://ian-flores.github.io/securecontext/reference/is_document.md)
   : Test if object is a document
 
@@ -80,6 +120,8 @@ MIT
 
 - [`new_embedder()`](https://ian-flores.github.io/securecontext/reference/new_embedder.md)
   : Create an embedder
+- [`securecontext_embedder()`](https://ian-flores.github.io/securecontext/reference/securecontext_embedder.md)
+  : S7 class for securecontext embedders
 - [`embed_tfidf()`](https://ian-flores.github.io/securecontext/reference/embed_tfidf.md)
   : Create a TF-IDF embedder
 - [`embed_texts()`](https://ian-flores.github.io/securecontext/reference/embed_texts.md)
@@ -99,6 +141,8 @@ MIT
 
 - [`retriever()`](https://ian-flores.github.io/securecontext/reference/retriever.md)
   : Create a retriever
+- [`securecontext_retriever()`](https://ian-flores.github.io/securecontext/reference/securecontext_retriever.md)
+  : S7 class for securecontext retrievers
 - [`retrieve()`](https://ian-flores.github.io/securecontext/reference/retrieve.md)
   : Retrieve relevant chunks
 - [`add_documents()`](https://ian-flores.github.io/securecontext/reference/add_documents.md)
@@ -108,6 +152,8 @@ MIT
 
 - [`context_builder()`](https://ian-flores.github.io/securecontext/reference/context_builder.md)
   : Create a context builder
+- [`securecontext_context_builder()`](https://ian-flores.github.io/securecontext/reference/securecontext_context_builder.md)
+  : S7 class for securecontext context builders
 - [`cb_add()`](https://ian-flores.github.io/securecontext/reference/cb_add.md)
   : Add content to a context builder
 - [`cb_build()`](https://ian-flores.github.io/securecontext/reference/cb_build.md)
@@ -131,7 +177,11 @@ MIT
 
 # Articles
 
-### All vignettes
+### Guides
 
 - [Getting Started with
   securecontext](https://ian-flores.github.io/securecontext/articles/securecontext.md):
+- [Retrieval
+  Workflows](https://ian-flores.github.io/securecontext/articles/retrieval-workflows.md):
+- [RAG-Enabled
+  Agents](https://ian-flores.github.io/securecontext/articles/orchestr-integration.md):

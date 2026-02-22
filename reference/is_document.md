@@ -17,3 +17,13 @@ is_document(x)
 ## Value
 
 Logical.
+
+## Examples
+
+``` r
+doc <- document("Hello world")
+is_document(doc)
+#> [1] TRUE
+is_document("not a doc")
+#> [1] FALSE
+```

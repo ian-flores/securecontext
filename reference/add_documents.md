@@ -31,3 +31,14 @@ add_documents(ret, documents, chunk_strategy = "recursive", ...)
 ## Value
 
 The retriever, invisibly.
+
+## Examples
+
+``` r
+emb <- embed_tfidf(c("cat sat on mat", "dog ran in park"))
+vs <- vector_store$new(dims = emb@dims)
+ret <- retriever(vs, emb)
+add_documents(ret, document("The cat sat on the mat."))
+vs$size()
+#> [1] 1
+```

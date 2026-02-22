@@ -4,6 +4,8 @@
 
 - [`document()`](https://ian-flores.github.io/securecontext/reference/document.md)
   : Create a document
+- [`securecontext_document()`](https://ian-flores.github.io/securecontext/reference/securecontext_document.md)
+  : S7 class for securecontext documents
 - [`is_document()`](https://ian-flores.github.io/securecontext/reference/is_document.md)
   : Test if object is a document
 
@@ -24,6 +26,8 @@
 
 - [`new_embedder()`](https://ian-flores.github.io/securecontext/reference/new_embedder.md)
   : Create an embedder
+- [`securecontext_embedder()`](https://ian-flores.github.io/securecontext/reference/securecontext_embedder.md)
+  : S7 class for securecontext embedders
 - [`embed_tfidf()`](https://ian-flores.github.io/securecontext/reference/embed_tfidf.md)
   : Create a TF-IDF embedder
 - [`embed_texts()`](https://ian-flores.github.io/securecontext/reference/embed_texts.md)
@@ -43,6 +47,8 @@
 
 - [`retriever()`](https://ian-flores.github.io/securecontext/reference/retriever.md)
   : Create a retriever
+- [`securecontext_retriever()`](https://ian-flores.github.io/securecontext/reference/securecontext_retriever.md)
+  : S7 class for securecontext retrievers
 - [`retrieve()`](https://ian-flores.github.io/securecontext/reference/retrieve.md)
   : Retrieve relevant chunks
 - [`add_documents()`](https://ian-flores.github.io/securecontext/reference/add_documents.md)
@@ -52,6 +58,8 @@
 
 - [`context_builder()`](https://ian-flores.github.io/securecontext/reference/context_builder.md)
   : Create a context builder
+- [`securecontext_context_builder()`](https://ian-flores.github.io/securecontext/reference/securecontext_context_builder.md)
+  : S7 class for securecontext context builders
 - [`cb_add()`](https://ian-flores.github.io/securecontext/reference/cb_add.md)
   : Add content to a context builder
 - [`cb_build()`](https://ian-flores.github.io/securecontext/reference/cb_build.md)

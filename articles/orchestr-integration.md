@@ -1,0 +1,271 @@
+# RAG-Enabled Agents
+
+This vignette shows how to combine securecontext and orchestr to build
+retrieval-augmented generation (RAG) agents. securecontext handles
+document ingestion, embedding, retrieval, and token-budgeted context
+assembly; orchestr handles agent orchestration and graph-based
+workflows.
+
+For securecontext basics, see
+[`vignette("securecontext")`](https://ian-flores.github.io/securecontext/articles/securecontext.md)
+and
+[`vignette("retrieval-workflows")`](https://ian-flores.github.io/securecontext/articles/retrieval-workflows.md).
+For orchestr basics, see
+[`vignette("quickstart", package = "orchestr")`](https://ian-flores.github.io/orchestr/articles/quickstart.html).
+
+## Building a Knowledge Base
+
+Start by creating documents, chunking them, and loading them into a
+retriever. Everything runs locally – no external API calls required.
+
+``` r
+library(securecontext)
+library(orchestr)
+library(ellmer)
+
+# Create documents from your corpus
+docs <- list(
+  document("R provides extensive facilities for statistical computing
+and graphics. Linear models, time-series analysis, classification, and
+clustering are all available out of the box.",
+    metadata = list(source = "r-intro", topic = "statistics")),
+  document("The tidyverse is a collection of R packages for data science.
+Core packages include ggplot2, dplyr, tidyr, readr, and purrr.",
+    metadata = list(source = "r-intro", topic = "tidyverse")),
+  document("Shiny is an R package for building interactive web applications.
+It combines R's analytical power with modern web UI components.",
+    metadata = list(source = "r-intro", topic = "shiny"))
+)
+
+# Build embedder from the corpus
+corpus <- vapply(docs, function(d) d@text, character(1))
+embedder <- embed_tfidf(corpus)
+
+# Create vector store and retriever
+vs <- vector_store$new(dims = embedder@dims)
+ret <- retriever(vs, embedder)
+add_documents(ret, docs, chunk_strategy = "sentence")
+```
+
+## The `as_orchestr_memory()` Adapter
+
+securecontext’s `knowledge_store` provides persistent key-value storage
+backed by JSONL. The
+[`as_orchestr_memory()`](https://ian-flores.github.io/securecontext/reference/as_orchestr_memory.md)
+function wraps it so orchestr agents can use it as their memory backend.
+
+``` r
+# Create a persistent knowledge store
+ks <- knowledge_store$new(path = "agent-memory.jsonl")
+
+# Wrap it for orchestr
+mem <- as_orchestr_memory(ks)
+
+# The adapter exposes get/set -- the same interface orchestr expects
+mem$set("user.name", "Alice")
+mem$set("session.topic", "data analysis")
+mem$get("user.name")
+#> [1] "Alice"
+```
+
+The underlying JSONL file persists across R sessions, so agent memory
+survives restarts.
+
+## Retrieval-in-the-Loop Graph
+
+The core RAG pattern is: retrieve relevant context before each LLM call.
+With orchestr’s
+[`graph_builder()`](https://ian-flores.github.io/orchestr/reference/graph_builder.html),
+you wire this as a two-node graph: a retrieval node followed by an agent
+node.
+
+``` r
+# Node 1: retrieve relevant chunks and build context
+retrieve_node <- function(state, config) {
+  query <- state$messages[[length(state$messages)]]
+
+  # Retrieve and assemble token-limited context
+  result <- context_for_chat(ret, query, max_tokens = 2000, k = 5)
+
+  list(context = result$context)
+}
+
+# Node 2: LLM agent that uses the retrieved context
+agent_node <- function(state, config) {
+  context <- state$context %||% ""
+  query <- state$messages[[length(state$messages)]]
+
+  prompt <- paste0(
+    "Use the following context to answer the question.\n\n",
+    "Context:\n", context, "\n\n",
+    "Question: ", query
+  )
+
+  chat <- chat_anthropic(system_prompt = "You are a helpful R assistant.")
+  response <- chat$chat(prompt)
+
+  list(messages = list(response))
+}
+
+# Wire the graph: retrieve -> agent -> END
+schema <- state_schema(
+  messages = "append:list",
+  context = "character"
+)
+
+graph <- graph_builder(state_schema = schema)
+graph$add_node("retrieve", retrieve_node)
+graph$add_node("agent", agent_node)
+graph$add_edge("retrieve", "agent")
+graph$add_edge("agent", END)
+graph$set_entry_point("retrieve")
+
+rag_graph <- graph$compile()
+
+# Run it
+result <- rag_graph$invoke(list(
+  messages = list("What packages are in the tidyverse?")
+))
+```
+
+Every user query first passes through the retrieval node, which searches
+the vector store and assembles a context string. The agent node then
+answers using that context.
+
+## Token Budget Management
+
+When your knowledge base is large, retrieved chunks may exceed the LLM’s
+context window. The
+[`context_builder()`](https://ian-flores.github.io/securecontext/reference/context_builder.md)
+controls this with a token budget and priorities.
+
+``` r
+cb <- context_builder(max_tokens = 500)
+
+# System prompt gets highest priority -- always included
+cb <- cb_add(cb, "You are an R expert.", priority = 10, label = "system")
+
+# Retrieved chunks get decreasing priority by relevance score
+hits <- retrieve(ret, "statistical models", k = 5)
+for (i in seq_len(nrow(hits))) {
+  chunk_text <- hits$id[i]  # or look up the original text
+  cb <- cb_add(cb, chunk_text, priority = hits$score[i], label = hits$id[i])
+}
+
+result <- cb_build(cb)
+cat("Included:", paste(result$included, collapse = ", "), "\n")
+cat("Excluded:", paste(result$excluded, collapse = ", "), "\n")
+cat("Total tokens:", result$total_tokens, "\n")
+```
+
+The builder packs items in priority order until the budget is exhausted.
+Dropped items are reported in `$excluded`, so you can log what was cut.
+
+Use
+[`cb_reset()`](https://ian-flores.github.io/securecontext/reference/cb_reset.md)
+between turns to reuse the same builder:
+
+``` r
+cb <- cb_reset(cb)
+# Now add fresh content for the next turn
+```
+
+## Persistent Knowledge Store
+
+For agents that need memory across sessions, `knowledge_store` persists
+to a JSONL file. Combined with the orchestr memory adapter, this gives
+agents durable recall.
+
+``` r
+# Knowledge store persists to disk
+ks <- knowledge_store$new(path = "long-term-memory.jsonl")
+
+# Store structured facts
+ks$set("user.preference", list(language = "R", theme = "dark"))
+ks$set("session.2025-01-15", list(
+  topic = "regression models",
+  outcome = "built linear model for mtcars"
+))
+
+# Search by key pattern
+ks$search("^session")
+#> $`session.2025-01-15`
+#> $`session.2025-01-15`$topic
+#> [1] "regression models"
+
+# Use in an orchestr agent via the adapter
+mem <- as_orchestr_memory(ks)
+```
+
+## Putting It All Together
+
+Here is a complete RAG agent that combines retrieval, token management,
+and persistent memory in an orchestr graph.
+
+``` r
+library(securecontext)
+library(orchestr)
+library(ellmer)
+
+# --- Knowledge base ---
+docs <- list(
+  document("dplyr provides a grammar of data manipulation with verbs
+like filter, select, mutate, summarise, and arrange."),
+  document("ggplot2 implements the grammar of graphics. Build plots
+layer by layer with aes(), geom_point(), geom_line(), and facet_wrap()."),
+  document("tidyr helps tidy data with pivot_longer, pivot_wider,
+separate, and unite.")
+)
+
+corpus <- vapply(docs, function(d) d@text, character(1))
+embedder <- embed_tfidf(corpus)
+vs <- vector_store$new(dims = embedder@dims)
+ret <- retriever(vs, embedder)
+add_documents(ret, docs, chunk_strategy = "sentence")
+
+# --- Persistent memory ---
+ks <- knowledge_store$new(path = tempfile(fileext = ".jsonl"))
+mem <- as_orchestr_memory(ks)
+
+# --- Graph nodes ---
+retrieve_node <- function(state, config) {
+  query <- state$messages[[length(state$messages)]]
+  result <- context_for_chat(ret, query, max_tokens = 1500, k = 3)
+  list(context = result$context)
+}
+
+agent_node <- function(state, config) {
+  context <- state$context %||% ""
+  query <- state$messages[[length(state$messages)]]
+
+  prompt <- paste0("Context:\n", context, "\n\nQuestion: ", query)
+  chat <- chat_anthropic(
+    system_prompt = "Answer questions about R packages using the provided context."
+  )
+  response <- chat$chat(prompt)
+
+  # Persist what we learned
+  mem$set(paste0("query.", Sys.time()), query)
+
+  list(messages = list(response))
+}
+
+# --- Build and run ---
+schema <- state_schema(messages = "append:list", context = "character")
+g <- graph_builder(state_schema = schema)
+g$add_node("retrieve", retrieve_node)
+g$add_node("agent", agent_node)
+g$add_edge("retrieve", "agent")
+g$add_edge("agent", END)
+g$set_entry_point("retrieve")
+
+rag <- g$compile()
+result <- rag$invoke(list(
+  messages = list("How do I reshape data from wide to long format?")
+))
+```
+
+The retrieval node finds chunks about tidyr’s `pivot_longer`, the
+context builder fits them within the token budget, and the agent answers
+using that grounded context. The query is also persisted to the
+knowledge store for future reference.

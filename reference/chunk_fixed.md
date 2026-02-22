@@ -26,3 +26,20 @@ chunk_fixed(text, size = 500L, overlap = 50L)
 ## Value
 
 Character vector of chunks.
+
+## Examples
+
+``` r
+chunk_fixed(paste(rep("word", 200), collapse = " "), size = 100, overlap = 10)
+#>  [1] "word word word word word word word word word word word word word word word word word word word word "
+#>  [2] "word word word word word word word word word word word word word word word word word word word word "
+#>  [3] "word word word word word word word word word word word word word word word word word word word word "
+#>  [4] "word word word word word word word word word word word word word word word word word word word word "
+#>  [5] "word word word word word word word word word word word word word word word word word word word word "
+#>  [6] "word word word word word word word word word word word word word word word word word word word word "
+#>  [7] "word word word word word word word word word word word word word word word word word word word word "
+#>  [8] "word word word word word word word word word word word word word word word word word word word word "
+#>  [9] "word word word word word word word word word word word word word word word word word word word word "
+#> [10] "word word word word word word word word word word word word word word word word word word word word "
+#> [11] "word word word word word word word word word word word word word word word word word word word word" 
+```

@@ -202,3 +202,16 @@ The objects of this class are cloneable with this method.
 - `deep`:
 
   Whether to make a deep clone.
+
+## Examples
+
+``` r
+ks <- knowledge_store$new()
+ks$set("color", "blue", metadata = list(source = "test"))
+ks$get("color")
+#> [1] "blue"
+ks$search("col")
+#> [1] "color"
+ks$size()
+#> [1] 1
+```

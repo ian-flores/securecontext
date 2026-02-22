@@ -1,13 +1,11 @@
-# Create a retriever
+# S7 class for securecontext retrievers
 
-Wraps a
-[vector_store](https://ian-flores.github.io/securecontext/reference/vector_store.md)
-and an embedder for semantic retrieval.
+S7 class for securecontext retrievers
 
 ## Usage
 
 ``` r
-retriever(store, embedder)
+securecontext_retriever(store = NULL, embedder = NULL)
 ```
 
 ## Arguments
@@ -22,14 +20,14 @@ retriever(store, embedder)
 
   A `securecontext_embedder` object.
 
-## Value
-
-A `securecontext_retriever` object.
-
 ## Examples
 
 ``` r
 emb <- embed_tfidf(c("cat sat on mat", "dog ran in park"))
 vs <- vector_store$new(dims = emb@dims)
 ret <- retriever(vs, emb)
+ret@embedder
+#> <securecontext::securecontext_embedder>
+#>  @ embed_fn: function (texts)  
+#>  @ dims    : int 8
 ```

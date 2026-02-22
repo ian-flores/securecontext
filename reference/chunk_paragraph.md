@@ -17,3 +17,10 @@ chunk_paragraph(text)
 ## Value
 
 Character vector of paragraph chunks.
+
+## Examples
+
+``` r
+chunk_paragraph("First paragraph.\n\nSecond paragraph.\n\nThird.")
+#> [1] "First paragraph."  "Second paragraph." "Third."           
+```

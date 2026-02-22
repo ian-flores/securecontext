@@ -22,3 +22,13 @@ as_orchestr_memory(ks)
 
 A list with `get` and `set` functions compatible with orchestr memory
 interface.
+
+## Examples
+
+``` r
+ks <- knowledge_store$new()
+mem <- as_orchestr_memory(ks)
+mem$set("key", "value")
+mem$get("key")
+#> [1] "value"
+```

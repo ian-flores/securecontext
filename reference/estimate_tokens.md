@@ -19,3 +19,10 @@ estimate_tokens(text)
 ## Value
 
 Numeric token count estimate.
+
+## Examples
+
+``` r
+estimate_tokens("Hello world, this is a test.")
+#> [1] 8
+```

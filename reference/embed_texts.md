@@ -20,4 +20,13 @@ embed_texts(embedder, texts)
 
 ## Value
 
-Numeric matrix with `length(texts)` rows and `embedder$dims` columns.
+Numeric matrix with `length(texts)` rows and `embedder@dims` columns.
+
+## Examples
+
+``` r
+emb <- embed_tfidf(c("the cat sat", "the dog ran"))
+mat <- embed_texts(emb, c("cat sat", "dog ran"))
+nrow(mat)
+#> [1] 2
+```

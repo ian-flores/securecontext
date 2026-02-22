@@ -22,3 +22,13 @@ new_embedder(embed_fn, dims)
 ## Value
 
 A `securecontext_embedder` object.
+
+## Examples
+
+``` r
+# Create a simple random embedder
+random_embed <- function(texts) matrix(runif(length(texts) * 3), ncol = 3)
+emb <- new_embedder(random_embed, dims = 3L)
+emb@dims
+#> [1] 3
+```

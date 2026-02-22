@@ -18,3 +18,10 @@ chunk_sentence(text)
 ## Value
 
 Character vector of sentence chunks.
+
+## Examples
+
+``` r
+chunk_sentence("First sentence. Second sentence. Third one.")
+#> [1] "First sentence."  "Second sentence." "Third one."      
+```

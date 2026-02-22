@@ -1,6 +1,6 @@
 # Create a document
 
-Constructs an S3 object representing a text document with metadata.
+Constructs an S7 object representing a text document with metadata.
 
 ## Usage
 
@@ -31,9 +31,9 @@ A `securecontext_document` object.
 ``` r
 doc <- document("Hello world", metadata = list(source = "test"))
 doc
-#> <securecontext_document>
-#>   id: doc_1b7a3c510ee2 
-#>   chars: 11 
-#>   metadata: source 
-#>   text: Hello world 
+#> <securecontext::securecontext_document>
+#>  @ text    : chr "Hello world"
+#>  @ metadata:List of 1
+#>  .. $ source: chr "test"
+#>  @ id      : chr "doc_1bd22935c4c2"
 ```
