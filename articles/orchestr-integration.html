@@ -61,19 +61,35 @@
 
     
     
-<p>This vignette shows how to combine securecontext and orchestr to
-build retrieval-augmented generation (RAG) agents. securecontext handles
-document ingestion, embedding, retrieval, and token-budgeted context
-assembly; orchestr handles agent orchestration and graph-based
-workflows.</p>
+<div class="section level2">
+<h2 id="why-integrate-retrieval-with-orchestration">Why Integrate Retrieval with Orchestration?<a class="anchor" aria-label="anchor" href="#why-integrate-retrieval-with-orchestration"></a>
+</h2>
+<p>An LLM agent that can retrieve information from a knowledge base
+before answering is fundamentally more capable than one that relies
+solely on its training data. But retrieval alone is not enough – you
+also need to decide <em>when</em> to retrieve, <em>how much</em> context
+to include, and <em>where</em> to store what the agent learns. These are
+orchestration concerns.</p>
+<p>securecontext handles the retrieval side: document ingestion,
+embedding, vector search, and token-aware context assembly. orchestr
+handles the orchestration side: defining agent workflows as directed
+graphs, managing state between nodes, and routing execution. Together,
+they let you build RAG agents where retrieval is a first-class step in
+the workflow, not an afterthought bolted onto a prompt.</p>
+<p>This vignette shows how to connect the two packages using the memory
+adapter pattern and graph-based retrieve-then-generate workflows.</p>
 <p>For securecontext basics, see <code><a href="../articles/securecontext.html">vignette("securecontext")</a></code>
 and <code><a href="../articles/retrieval-workflows.html">vignette("retrieval-workflows")</a></code>. For orchestr basics,
 see <code><a href="https://ian-flores.github.io/orchestr/articles/quickstart.html" class="external-link">vignette("quickstart", package = "orchestr")</a></code>.</p>
+</div>
 <div class="section level2">
 <h2 id="building-a-knowledge-base">Building a Knowledge Base<a class="anchor" aria-label="anchor" href="#building-a-knowledge-base"></a>
 </h2>
 <p>Start by creating documents, chunking them, and loading them into a
-retriever. Everything runs locally – no external API calls required.</p>
+retriever. This is the same pipeline from
+<code><a href="../articles/retrieval-workflows.html">vignette("retrieval-workflows")</a></code>, repeated here for
+completeness. Everything runs locally – no external API calls
+required.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ian-flores.github.io/securecontext/">securecontext</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ian-flores.github.io/orchestr/" class="external-link">orchestr</a></span><span class="op">)</span></span>
@@ -105,10 +121,15 @@ retriever. Everything runs locally – no external API calls required.</p>
 <div class="section level2">
 <h2 id="the-as_orchestr_memory-adapter">The <code>as_orchestr_memory()</code> Adapter<a class="anchor" aria-label="anchor" href="#the-as_orchestr_memory-adapter"></a>
 </h2>
-<p>securecontext’s <code>knowledge_store</code> provides persistent
-key-value storage backed by JSONL. The <code><a href="../reference/as_orchestr_memory.html">as_orchestr_memory()</a></code>
-function wraps it so orchestr agents can use it as their memory
-backend.</p>
+<p>orchestr agents expect a memory backend with <code><a href="https://rdrr.io/r/base/get.html" class="external-link">get()</a></code> and
+<code>set()</code> methods. securecontext’s <code>knowledge_store</code>
+provides persistent key-value storage backed by JSONL, but its interface
+does not match what orchestr expects out of the box. The
+<code><a href="../reference/as_orchestr_memory.html">as_orchestr_memory()</a></code> function bridges this gap.</p>
+<p>The adapter pattern is simple: wrap a securecontext object in a thin
+layer that exposes the interface another package expects. The underlying
+storage, persistence, and search capabilities of the knowledge store are
+fully preserved – the adapter just translates method calls.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Create a persistent knowledge store</span></span>
 <span><span class="va">ks</span> <span class="op">&lt;-</span> <span class="va"><a href="../reference/knowledge_store.html">knowledge_store</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>path <span class="op">=</span> <span class="st">"agent-memory.jsonl"</span><span class="op">)</span></span>
@@ -122,7 +143,10 @@ backend.</p>
 <span><span class="va">mem</span><span class="op">$</span><span class="fu">get</span><span class="op">(</span><span class="st">"user.name"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "Alice"</span></span></code></pre></div>
 <p>The underlying JSONL file persists across R sessions, so agent memory
-survives restarts.</p>
+survives restarts. You can also access the knowledge store directly (via
+<code>ks</code>) to use features like <code>$search()</code> and
+<code>$list()</code> that are not part of the orchestr memory
+interface.</p>
 </div>
 <div class="section level2">
 <h2 id="retrieval-in-the-loop-graph">Retrieval-in-the-Loop Graph<a class="anchor" aria-label="anchor" href="#retrieval-in-the-loop-graph"></a>
@@ -130,7 +154,21 @@ survives restarts.</p>
 <p>The core RAG pattern is: retrieve relevant context before each LLM
 call. With orchestr’s <code><a href="https://ian-flores.github.io/orchestr/reference/graph_builder.html" class="external-link">graph_builder()</a></code>, you wire this as a
 two-node graph: a retrieval node followed by an agent node.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<p>The following diagram shows the flow:</p>
+<pre><code>  +----------+      +---------+      +-----+
+  | retrieve | ---&gt; |  agent  | ---&gt; | END |
+  +----------+      +---------+      +-----+
+       |                  |
+  Searches vector    Uses retrieved
+  store, builds      context to
+  token-limited      answer query
+  context string     via LLM</code></pre>
+<p>The retrieval node runs the securecontext pipeline (retrieve +
+context build). The agent node takes that context and passes it to an
+LLM alongside the user’s question. By separating these concerns into
+distinct graph nodes, each step is independently testable and
+replaceable.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Node 1: retrieve relevant chunks and build context</span></span>
 <span><span class="va">retrieve_node</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">state</span>, <span class="va">config</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">query</span> <span class="op">&lt;-</span> <span class="va">state</span><span class="op">$</span><span class="va">messages</span><span class="op">[[</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">state</span><span class="op">$</span><span class="va">messages</span><span class="op">)</span><span class="op">]</span><span class="op">]</span></span>
@@ -179,15 +217,20 @@ two-node graph: a retrieval node followed by an agent node.</p>
 <span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Every user query first passes through the retrieval node, which
 searches the vector store and assembles a context string. The agent node
-then answers using that context.</p>
+then answers using that context. Because the context builder enforces a
+token budget, the agent node always receives a prompt that fits within
+the model’s context window.</p>
 </div>
 <div class="section level2">
 <h2 id="token-budget-management">Token Budget Management<a class="anchor" aria-label="anchor" href="#token-budget-management"></a>
 </h2>
 <p>When your knowledge base is large, retrieved chunks may exceed the
 LLM’s context window. The <code><a href="../reference/context_builder.html">context_builder()</a></code> controls this
-with a token budget and priorities.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+with a token budget and priorities. For a detailed treatment of priority
+strategies and overflow behavior, see
+<code><a href="../articles/context-building.html">vignette("context-building")</a></code>.</p>
+<p>Here is a practical example using retrieval scores as priorities:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/context_builder.html">context_builder</a></span><span class="op">(</span>max_tokens <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># System prompt gets highest priority -- always included</span></span>
@@ -209,7 +252,7 @@ exhausted. Dropped items are reported in <code>$excluded</code>, so you
 can log what was cut.</p>
 <p>Use <code><a href="../reference/cb_reset.html">cb_reset()</a></code> between turns to reuse the same
 builder:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cb_reset.html">cb_reset</a></span><span class="op">(</span><span class="va">cb</span><span class="op">)</span></span>
 <span><span class="co"># Now add fresh content for the next turn</span></span></code></pre></div>
 </div>
@@ -218,8 +261,10 @@ builder:</p>
 </h2>
 <p>For agents that need memory across sessions,
 <code>knowledge_store</code> persists to a JSONL file. Combined with the
-orchestr memory adapter, this gives agents durable recall.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+orchestr memory adapter, this gives agents durable recall – the agent
+can remember user preferences, past queries, and learned facts across
+restarts.</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Knowledge store persists to disk</span></span>
 <span><span class="va">ks</span> <span class="op">&lt;-</span> <span class="va"><a href="../reference/knowledge_store.html">knowledge_store</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>path <span class="op">=</span> <span class="st">"long-term-memory.jsonl"</span><span class="op">)</span></span>
 <span></span>
@@ -243,8 +288,12 @@ orchestr memory adapter, this gives agents durable recall.</p>
 <h2 id="putting-it-all-together">Putting It All Together<a class="anchor" aria-label="anchor" href="#putting-it-all-together"></a>
 </h2>
 <p>Here is a complete RAG agent that combines retrieval, token
-management, and persistent memory in an orchestr graph.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+management, and persistent memory in an orchestr graph. This represents
+a production-ready pattern: documents are ingested into a local vector
+store, queries trigger retrieval and context assembly, the LLM answers
+using grounded context, and the agent persists what it learns for future
+sessions.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ian-flores.github.io/securecontext/">securecontext</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ian-flores.github.io/orchestr/" class="external-link">orchestr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ellmer.tidyverse.org" class="external-link">ellmer</a></span><span class="op">)</span></span>

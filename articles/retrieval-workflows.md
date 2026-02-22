@@ -1,9 +1,45 @@
 # Retrieval Workflows
 
-This vignette walks through a complete retrieval-augmented generation
-(RAG) workflow using securecontext. Every step – document creation,
-chunking, embedding, vector search, knowledge storage, and context
-assembly – runs locally with no external API calls.
+## Why Local Retrieval?
+
+Retrieval-augmented generation (RAG) lets an LLM answer questions about
+your own documents – internal reports, package documentation, domain
+knowledge – by fetching relevant passages and injecting them into the
+prompt. Most RAG tooling requires sending your documents to an external
+embedding API, which introduces latency, cost, and privacy concerns.
+
+securecontext takes a **local-first** approach. Its TF-IDF embedder runs
+entirely in your R process: no API keys, no network calls, no data
+leaving your machine. This makes it suitable for air-gapped
+environments, privacy-sensitive workloads, and rapid prototyping where
+you want results without configuring external services.
+
+This vignette walks through the complete retrieval pipeline step by
+step. Every operation – document creation, chunking, embedding, vector
+search, knowledge storage, and context assembly – runs locally.
+
+## The Full RAG Pipeline
+
+The following diagram shows how data flows from raw documents to an
+LLM-ready context string:
+
+      Ingest                      Search                     Assemble
+      ------                      ------                     --------
+      document()                  retrieve()                 context_builder()
+          |                           |                           |
+          v                           v                           v
+      chunk_text()              embed query               cb_add() per chunk
+          |                      with TF-IDF                      |
+          v                           |                           v
+      embed_tfidf()              cosine similarity          cb_build()
+          |                      against store                    |
+          v                           |                           v
+      vector_store$add()         ranked results             token-limited
+                                                            context string
+
+The left column (ingest) happens once when you load your corpus. The
+middle column (search) runs on every query. The right column (assemble)
+packs results into a token budget before sending to an LLM.
 
 ``` r
 library(securecontext)
@@ -13,8 +49,10 @@ library(securecontext)
 
 A
 [`document()`](https://ian-flores.github.io/securecontext/reference/document.md)
-wraps raw text with metadata and an auto-generated identifier. Documents
-are S7 objects, so properties are accessed with `@`.
+wraps raw text with metadata and an auto-generated identifier. Metadata
+travels with the document through the pipeline, making it easy to trace
+which source a retrieved chunk came from. Documents are S7 objects, so
+properties are accessed with `@`.
 
 ``` r
 doc_r <- document(
@@ -46,7 +84,7 @@ like C and Fortran.",
 
 # S7 property access with @
 doc_r@id
-#> [1] "doc_1e094c63d4c"
+#> [1] "doc_1e7412896976"
 doc_r@metadata
 #> $source
 #> [1] "intro"
@@ -58,7 +96,12 @@ doc_r@metadata
 ## Step 2: Chunk Text
 
 Chunking splits long text into smaller pieces suitable for embedding and
-retrieval. securecontext offers four strategies:
+retrieval. Smaller, focused chunks improve search precision because the
+embedder can match a query against a specific passage rather than an
+entire document. The tradeoff is that very small chunks may lose
+surrounding context.
+
+securecontext offers four strategies:
 
 | Strategy      | How it splits                             |
 |:--------------|:------------------------------------------|
@@ -66,6 +109,29 @@ retrieval. securecontext offers four strategies:
 | `"paragraph"` | On double newlines                        |
 | `"fixed"`     | Fixed character width with overlap        |
 | `"recursive"` | Hierarchical separators (LangChain-style) |
+
+### Choosing a Chunking Strategy
+
+The right strategy depends on your content and how users will query it:
+
+- **Sentence chunking** works best for narrative text (documentation,
+  articles) where individual statements carry meaning. Queries like
+  “What does dplyr do?” match well against single-sentence chunks.
+
+- **Paragraph chunking** preserves more context per chunk, which helps
+  when meaning spans multiple sentences. It works well for structured
+  documents with clear paragraph breaks.
+
+- **Fixed-size chunking** guarantees uniform chunk lengths, which is
+  useful when downstream components expect consistent input sizes. The
+  `overlap` parameter ensures that information near chunk boundaries is
+  not lost.
+
+- **Recursive chunking** is the most robust general-purpose strategy. It
+  tries larger separators first (double newlines, then single newlines,
+  then spaces, then characters), producing natural-looking chunks that
+  respect document structure. This is a good default when you are
+  unsure.
 
 ``` r
 # Sentence-level chunking
@@ -91,7 +157,9 @@ small_chunks
 ```
 
 Fixed-size chunking is useful when you need consistent chunk lengths,
-for example when working with models that expect uniform input sizes:
+for example when working with models that expect uniform input sizes.
+The `overlap` parameter creates a sliding window, ensuring that
+information near chunk boundaries appears in both adjacent chunks:
 
 ``` r
 long_text <- paste(
@@ -123,10 +191,19 @@ for (i in seq_along(fixed_chunks)) {
 
 ## Step 3: Build a TF-IDF Embedder
 
+Embeddings are numerical representations of text that capture semantic
+similarity. Texts about similar topics produce vectors that are close
+together in the embedding space, enabling search by meaning rather than
+exact keywords.
+
 [`embed_tfidf()`](https://ian-flores.github.io/securecontext/reference/embed_tfidf.md)
 builds a vocabulary from a corpus and returns an embedder that can
-project new texts into that TF-IDF space. Everything runs locally – no
-API keys required.
+project new texts into that TF-IDF space. TF-IDF (Term Frequency-Inverse
+Document Frequency) weighs words by how important they are to a specific
+document relative to the corpus. Common words like “the” get low
+weights; distinctive words like “regression” get high weights.
+
+Everything runs locally – no API keys required.
 
 ``` r
 # Gather all document texts as the training corpus
@@ -147,8 +224,13 @@ cat("Query embedding shape:", nrow(query_matrix), "x", ncol(query_matrix), "\n")
 ## Step 4: Vector Store
 
 The `vector_store` is an R6 class providing in-memory cosine-similarity
-search with optional RDS persistence. Since it is R6, use `$` for method
-access.
+search with optional RDS persistence. It stores embedding vectors keyed
+by ID and retrieves the closest matches to a query vector. Since it is
+R6, use `$` for method access.
+
+Cosine similarity measures the angle between two vectors, ignoring
+magnitude. A score of 1.0 means identical direction (maximum
+similarity); 0.0 means orthogonal (no similarity).
 
 ``` r
 vs <- vector_store$new(dims = embedder@dims)
@@ -171,7 +253,9 @@ print(results)
 #> 3  julia 0.00000000
 ```
 
-Persistence is straightforward with `$save()` and `$load()`:
+Persistence is straightforward with `$save()` and `$load()`. This lets
+you build an embedding index once and reuse it across R sessions without
+re-embedding your corpus:
 
 ``` r
 tmp <- tempfile(fileext = ".rds")
@@ -188,13 +272,19 @@ unlink(tmp)
 
 ## Step 5: Retriever – the High-Level Interface
 
-A
+The previous steps (chunk, embed, store, search) are the building
+blocks. The
 [`retriever()`](https://ian-flores.github.io/securecontext/reference/retriever.md)
-combines a vector store and an embedder into a single object. Use
+combines a vector store and an embedder into a single object that
+handles the full ingest-and-search workflow. Use
 [`add_documents()`](https://ian-flores.github.io/securecontext/reference/add_documents.md)
 to chunk, embed, and store documents in one call, then
 [`retrieve()`](https://ian-flores.github.io/securecontext/reference/retrieve.md)
 to search.
+
+This is the recommended interface for most applications – it reduces
+boilerplate and ensures that chunking and embedding are consistent
+between ingest and query time.
 
 ``` r
 # Fresh store for the retriever
@@ -212,19 +302,27 @@ cat("Chunks in store:", vs_ret$size(), "\n\n")
 hits <- retrieve(ret, "machine learning", k = 3)
 print(hits)
 #>                         id     score
-#> 1 doc_1e09154c6160_chunk_4 0.3992843
-#> 2  doc_1e094c63d4c_chunk_1 0.0000000
-#> 3  doc_1e094c63d4c_chunk_2 0.0000000
+#> 1  doc_1e74715a25b_chunk_4 0.3992843
+#> 2 doc_1e7412896976_chunk_1 0.0000000
+#> 3 doc_1e7412896976_chunk_2 0.0000000
 ```
 
 The returned data frame contains chunk IDs and cosine similarity scores.
-Higher scores indicate greater relevance.
+Higher scores indicate greater relevance. You can use these scores
+directly as priorities in the context builder (see
+[`vignette("context-building")`](https://ian-flores.github.io/securecontext/articles/context-building.md)).
 
 ## Step 6: Knowledge Store
 
 The `knowledge_store` is an R6 class providing persistent key-value
-storage backed by JSONL. It is useful for storing agent memory, user
-preferences, or any structured data that should survive across sessions.
+storage backed by JSONL. While the vector store is optimized for
+similarity search over embeddings, the knowledge store is designed for
+structured data you look up by key: agent memory, user preferences,
+session history, learned facts.
+
+The JSONL format (one JSON object per line) makes the store
+append-friendly and human-readable. Data persists across R sessions
+automatically.
 
 ``` r
 ks <- knowledge_store$new(path = tempfile(fileext = ".jsonl"))
@@ -264,7 +362,12 @@ The
 [`context_builder()`](https://ian-flores.github.io/securecontext/reference/context_builder.md)
 assembles a token-limited context string from multiple sources,
 prioritizing the most important content. This is the final step before
-sending context to an LLM.
+sending context to an LLM – it ensures you stay within the model’s
+context window while including the most relevant information.
+
+For a deep dive into priority strategies, overflow behavior, and
+multi-turn patterns, see
+[`vignette("context-building")`](https://ian-flores.github.io/securecontext/articles/context-building.md).
 
 ``` r
 cb <- context_builder(max_tokens = 100)
@@ -326,7 +429,9 @@ cat("After reset -- included:", paste(result2$included, collapse = ", "), "\n")
 [`context_for_chat()`](https://ian-flores.github.io/securecontext/reference/context_for_chat.md)
 combines retrieval and context building in a single call. Given a
 retriever and a query, it retrieves the top-k chunks and packs them into
-a token-limited context string.
+a token-limited context string. This is the typical integration point
+for an agent: retrieve relevant information, assemble a context window,
+and pass it to an LLM provider.
 
 ``` r
 context_result <- context_for_chat(ret, "statistical computing", max_tokens = 2000, k = 5)
@@ -352,10 +457,6 @@ cat("Total tokens:", context_result$total_tokens, "\n")
 #> Total tokens: 73
 ```
 
-This is the typical integration point for an agent: retrieve relevant
-information, assemble a context window, and pass it to an LLM provider
-(via ellmer, httr2, or any other HTTP client).
-
 ## Summary
 
 The securecontext retrieval pipeline follows these steps:
@@ -379,3 +480,8 @@ The securecontext retrieval pipeline follows these steps:
     – token-aware assembly
 9.  **[`context_for_chat()`](https://ian-flores.github.io/securecontext/reference/context_for_chat.md)**
     – one-call retrieve-and-build
+
+For more on context building strategies, see
+[`vignette("context-building")`](https://ian-flores.github.io/securecontext/articles/context-building.md).
+To wire retrieval into orchestr agent graphs, see
+[`vignette("orchestr-integration")`](https://ian-flores.github.io/securecontext/articles/orchestr-integration.md).

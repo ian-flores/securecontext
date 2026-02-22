@@ -1,11 +1,65 @@
 # Getting Started with securecontext
 
-securecontext provides memory, knowledge persistence, RAG retrieval, and
-token-aware context management for R LLM agents.
+## What is securecontext?
+
+Large language models are powerful, but they only know what they were
+trained on. When you need an LLM to answer questions about *your*
+documents – internal reports, package documentation, domain-specific
+knowledge – you need to feed that information into the model’s context
+window. This pattern is called **Retrieval-Augmented Generation (RAG)**.
+
+securecontext provides a complete, local-first RAG pipeline for R. Every
+component – chunking, embedding, vector search, and context assembly –
+runs entirely on your machine with no external API calls. This matters
+for privacy-sensitive workloads: your documents never leave your
+environment.
+
+The package is also **token-aware**. LLMs have finite context windows,
+and naively stuffing retrieved text into a prompt wastes tokens or
+overflows the limit. securecontext’s context builder uses a
+priority-based budget system to pack the most important information
+first and transparently reports what was included and what was dropped.
+
+## The RAG Pipeline at a Glance
+
+The following diagram shows the end-to-end flow from raw documents to an
+LLM-ready context string:
+
+     Documents     Chunk        Embed       Store        Query       Context     LLM
+     ---------    -------      -------     -------      -------     ---------   -----
+     |  doc  | -> | sent | ->  | TF- | ->  | vec | <-   | "my  | -> | token | -> | R |
+     | text  |    | para |     | IDF |     | tor |      | query|    | aware |    |   |
+     |       |    | rec  |     |     |     | str |      |      |    | build |    |   |
+     ---------    -------      -------     -------      -------     ---------   -----
+     document()  chunk_text() embed_tfidf  vector_store retrieve()  context_    chat()
+                               ()          $new()                   builder()
+
+Each step is independently useful, but they compose naturally into a
+pipeline. This vignette covers the first three building blocks:
+documents, chunking, and the knowledge store. For the full retrieval
+pipeline, see
+[`vignette("retrieval-workflows")`](https://ian-flores.github.io/securecontext/articles/retrieval-workflows.md).
 
 ## Documents and Chunking
 
-Create documents and split them into chunks:
+The
+[`document()`](https://ian-flores.github.io/securecontext/reference/document.md)
+function wraps raw text with metadata and an auto-generated identifier.
+Documents are the unit of ingestion throughout the package.
+
+Chunking splits long text into smaller pieces suitable for embedding and
+retrieval. Smaller chunks improve search precision because the embedder
+can match a query against focused passages rather than entire documents.
+
+securecontext provides four chunking strategies, each suited to
+different content types:
+
+| Strategy      | How it splits                             | Best for                   |
+|:--------------|:------------------------------------------|:---------------------------|
+| `"sentence"`  | On sentence boundaries (`.` + space)      | Prose, documentation       |
+| `"paragraph"` | On double newlines                        | Structured reports         |
+| `"fixed"`     | Fixed character width with overlap        | Uniform input requirements |
+| `"recursive"` | Hierarchical separators (LangChain-style) | Mixed content              |
 
 ``` r
 library(securecontext)
@@ -22,33 +76,21 @@ chunks_para <- chunk_text(doc$text, strategy = "paragraph")
 chunks_rec  <- chunk_text(doc$text, strategy = "recursive", max_size = 50)
 ```
 
-## Embeddings and Vector Search
-
-Build TF-IDF embeddings locally (no API needed):
-
-``` r
-corpus <- c(
-  "R is great for statistics and data analysis.",
-  "Python excels at machine learning and deep learning.",
-  "Julia is fast for numerical computing."
-)
-
-embedder <- embed_tfidf(corpus)
-vs <- vector_store$new(dims = embedder$dims)
-
-# Add documents
-docs <- lapply(corpus, document)
-ret <- retriever(vs, embedder)
-add_documents(ret, docs)
-
-# Search
-results <- retrieve(ret, "statistical computing", k = 2)
-print(results)
-```
+The choice of strategy depends on your content. Sentence chunking works
+well for narrative text where individual statements carry meaning.
+Recursive chunking is more robust for mixed content because it tries
+larger separators first (double newlines, then single newlines, then
+spaces) before falling back to character splits.
 
 ## Knowledge Store
 
-Persistent key-value storage backed by JSONL:
+The `knowledge_store` is a persistent key-value store backed by a JSONL
+file. Unlike the vector store (which is optimized for similarity
+search), the knowledge store is designed for structured facts that you
+look up by key – user preferences, session state, agent memory.
+
+Because it writes to a JSONL file, stored data survives across R
+sessions. This makes it suitable for agents that need durable memory.
 
 ``` r
 ks <- knowledge_store$new(path = tempfile(fileext = ".jsonl"))
@@ -60,37 +102,24 @@ ks$get("user.name")
 ks$search("^user")
 ```
 
-## Context Builder
+Keys are plain strings, and values can be any R object that `jsonlite`
+can serialize (lists, vectors, data frames). The `$search()` method
+accepts a regular expression pattern to find keys by prefix or pattern.
 
-Assemble token-limited context with priorities:
+## Next Steps
 
-``` r
-cb <- context_builder(max_tokens = 500)
-cb <- cb_add(cb, "System instructions go here.", priority = 10, label = "system")
-cb <- cb_add(cb, "Retrieved context from documents.", priority = 5, label = "context")
-cb <- cb_add(cb, "Chat history summary.", priority = 3, label = "history")
+This vignette introduced the foundational building blocks: documents,
+chunking strategies, and the knowledge store. The rest of the
+securecontext documentation covers the full pipeline:
 
-result <- cb_build(cb)
-cat(result$context)
-result$included
-result$excluded
-```
-
-## Integration
-
-Use
-[`context_for_chat()`](https://ian-flores.github.io/securecontext/reference/context_for_chat.md)
-to combine retrieval and context building:
-
-``` r
-result <- context_for_chat(ret, "statistics", max_tokens = 2000)
-cat(result$context)
-```
-
-Wrap a knowledge store for orchestr:
-
-``` r
-mem <- as_orchestr_memory(ks)
-mem$set("key", "value")
-mem$get("key")
-```
+- **[`vignette("retrieval-workflows")`](https://ian-flores.github.io/securecontext/articles/retrieval-workflows.md)**
+  – Build a complete RAG pipeline: TF-IDF embeddings, vector search,
+  retrievers, and the
+  [`context_for_chat()`](https://ian-flores.github.io/securecontext/reference/context_for_chat.md)
+  convenience function.
+- **[`vignette("context-building")`](https://ian-flores.github.io/securecontext/articles/context-building.md)**
+  – Deep dive into the token-aware context builder: priority budgets,
+  overflow behavior, and multi-source assembly.
+- **[`vignette("orchestr-integration")`](https://ian-flores.github.io/securecontext/articles/orchestr-integration.md)**
+  – Wire retrieval into orchestr agent graphs with the memory adapter
+  and retrieve-then-generate patterns.

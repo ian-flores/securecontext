@@ -35,5 +35,5 @@ ret <- retriever(vs, emb)
 add_documents(ret, document("The cat sat on the mat."))
 retrieve(ret, "cat", k = 1)
 #>                         id     score
-#> 1 doc_1b655381d169_chunk_1 0.5773503
+#> 1 doc_1b97590c62b1_chunk_1 0.5773503
 ```

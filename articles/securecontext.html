@@ -61,13 +61,92 @@
 
     
     
-<p>securecontext provides memory, knowledge persistence, RAG retrieval,
-and token-aware context management for R LLM agents.</p>
+<div class="section level2">
+<h2 id="what-is-securecontext">What is securecontext?<a class="anchor" aria-label="anchor" href="#what-is-securecontext"></a>
+</h2>
+<p>Large language models are powerful, but they only know what they were
+trained on. When you need an LLM to answer questions about <em>your</em>
+documents – internal reports, package documentation, domain-specific
+knowledge – you need to feed that information into the model’s context
+window. This pattern is called <strong>Retrieval-Augmented Generation
+(RAG)</strong>.</p>
+<p>securecontext provides a complete, local-first RAG pipeline for R.
+Every component – chunking, embedding, vector search, and context
+assembly – runs entirely on your machine with no external API calls.
+This matters for privacy-sensitive workloads: your documents never leave
+your environment.</p>
+<p>The package is also <strong>token-aware</strong>. LLMs have finite
+context windows, and naively stuffing retrieved text into a prompt
+wastes tokens or overflows the limit. securecontext’s context builder
+uses a priority-based budget system to pack the most important
+information first and transparently reports what was included and what
+was dropped.</p>
+</div>
+<div class="section level2">
+<h2 id="the-rag-pipeline-at-a-glance">The RAG Pipeline at a Glance<a class="anchor" aria-label="anchor" href="#the-rag-pipeline-at-a-glance"></a>
+</h2>
+<p>The following diagram shows the end-to-end flow from raw documents to
+an LLM-ready context string:</p>
+<pre><code> Documents     Chunk        Embed       Store        Query       Context     LLM
+ ---------    -------      -------     -------      -------     ---------   -----
+ |  doc  | -&gt; | sent | -&gt;  | TF- | -&gt;  | vec | &lt;-   | "my  | -&gt; | token | -&gt; | R |
+ | text  |    | para |     | IDF |     | tor |      | query|    | aware |    |   |
+ |       |    | rec  |     |     |     | str |      |      |    | build |    |   |
+ ---------    -------      -------     -------      -------     ---------   -----
+ document()  chunk_text() embed_tfidf  vector_store retrieve()  context_    chat()
+                           ()          $new()                   builder()</code></pre>
+<p>Each step is independently useful, but they compose naturally into a
+pipeline. This vignette covers the first three building blocks:
+documents, chunking, and the knowledge store. For the full retrieval
+pipeline, see <code><a href="../articles/retrieval-workflows.html">vignette("retrieval-workflows")</a></code>.</p>
+</div>
 <div class="section level2">
 <h2 id="documents-and-chunking">Documents and Chunking<a class="anchor" aria-label="anchor" href="#documents-and-chunking"></a>
 </h2>
-<p>Create documents and split them into chunks:</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<p>The <code><a href="../reference/document.html">document()</a></code> function wraps raw text with metadata and
+an auto-generated identifier. Documents are the unit of ingestion
+throughout the package.</p>
+<p>Chunking splits long text into smaller pieces suitable for embedding
+and retrieval. Smaller chunks improve search precision because the
+embedder can match a query against focused passages rather than entire
+documents.</p>
+<p>securecontext provides four chunking strategies, each suited to
+different content types:</p>
+<table class="table">
+<colgroup>
+<col width="17%">
+<col width="48%">
+<col width="34%">
+</colgroup>
+<thead><tr class="header">
+<th align="left">Strategy</th>
+<th align="left">How it splits</th>
+<th align="left">Best for</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left"><code>"sentence"</code></td>
+<td align="left">On sentence boundaries (<code>.</code> + space)</td>
+<td align="left">Prose, documentation</td>
+</tr>
+<tr class="even">
+<td align="left"><code>"paragraph"</code></td>
+<td align="left">On double newlines</td>
+<td align="left">Structured reports</td>
+</tr>
+<tr class="odd">
+<td align="left"><code>"fixed"</code></td>
+<td align="left">Fixed character width with overlap</td>
+<td align="left">Uniform input requirements</td>
+</tr>
+<tr class="even">
+<td align="left"><code>"recursive"</code></td>
+<td align="left">Hierarchical separators (LangChain-style)</td>
+<td align="left">Mixed content</td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ian-flores.github.io/securecontext/">securecontext</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">doc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/document.html">document</a></span><span class="op">(</span></span>
@@ -80,34 +159,23 @@ and token-aware context management for R LLM agents.</p>
 <span><span class="va">chunks_sent</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/chunk_text.html">chunk_text</a></span><span class="op">(</span><span class="va">doc</span><span class="op">$</span><span class="va">text</span>, strategy <span class="op">=</span> <span class="st">"sentence"</span><span class="op">)</span></span>
 <span><span class="va">chunks_para</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/chunk_text.html">chunk_text</a></span><span class="op">(</span><span class="va">doc</span><span class="op">$</span><span class="va">text</span>, strategy <span class="op">=</span> <span class="st">"paragraph"</span><span class="op">)</span></span>
 <span><span class="va">chunks_rec</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/chunk_text.html">chunk_text</a></span><span class="op">(</span><span class="va">doc</span><span class="op">$</span><span class="va">text</span>, strategy <span class="op">=</span> <span class="st">"recursive"</span>, max_size <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="embeddings-and-vector-search">Embeddings and Vector Search<a class="anchor" aria-label="anchor" href="#embeddings-and-vector-search"></a>
-</h2>
-<p>Build TF-IDF embeddings locally (no API needed):</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">corpus</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>  <span class="st">"R is great for statistics and data analysis."</span>,</span>
-<span>  <span class="st">"Python excels at machine learning and deep learning."</span>,</span>
-<span>  <span class="st">"Julia is fast for numerical computing."</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">embedder</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/embed_tfidf.html">embed_tfidf</a></span><span class="op">(</span><span class="va">corpus</span><span class="op">)</span></span>
-<span><span class="va">vs</span> <span class="op">&lt;-</span> <span class="va"><a href="../reference/vector_store.html">vector_store</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>dims <span class="op">=</span> <span class="va">embedder</span><span class="op">$</span><span class="va">dims</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Add documents</span></span>
-<span><span class="va">docs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">corpus</span>, <span class="va">document</span><span class="op">)</span></span>
-<span><span class="va">ret</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/retriever.html">retriever</a></span><span class="op">(</span><span class="va">vs</span>, <span class="va">embedder</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/add_documents.html">add_documents</a></span><span class="op">(</span><span class="va">ret</span>, <span class="va">docs</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Search</span></span>
-<span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/retrieve.html">retrieve</a></span><span class="op">(</span><span class="va">ret</span>, <span class="st">"statistical computing"</span>, k <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">results</span><span class="op">)</span></span></code></pre></div>
+<p>The choice of strategy depends on your content. Sentence chunking
+works well for narrative text where individual statements carry meaning.
+Recursive chunking is more robust for mixed content because it tries
+larger separators first (double newlines, then single newlines, then
+spaces) before falling back to character splits.</p>
 </div>
 <div class="section level2">
 <h2 id="knowledge-store">Knowledge Store<a class="anchor" aria-label="anchor" href="#knowledge-store"></a>
 </h2>
-<p>Persistent key-value storage backed by JSONL:</p>
+<p>The <code>knowledge_store</code> is a persistent key-value store
+backed by a JSONL file. Unlike the vector store (which is optimized for
+similarity search), the knowledge store is designed for structured facts
+that you look up by key – user preferences, session state, agent
+memory.</p>
+<p>Because it writes to a JSONL file, stored data survives across R
+sessions. This makes it suitable for agents that need durable
+memory.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ks</span> <span class="op">&lt;-</span> <span class="va"><a href="../reference/knowledge_store.html">knowledge_store</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>path <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".jsonl"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -116,35 +184,32 @@ and token-aware context management for R LLM agents.</p>
 <span></span>
 <span><span class="va">ks</span><span class="op">$</span><span class="fu">get</span><span class="op">(</span><span class="st">"user.name"</span><span class="op">)</span></span>
 <span><span class="va">ks</span><span class="op">$</span><span class="fu">search</span><span class="op">(</span><span class="st">"^user"</span><span class="op">)</span></span></code></pre></div>
+<p>Keys are plain strings, and values can be any R object that
+<code>jsonlite</code> can serialize (lists, vectors, data frames). The
+<code>$search()</code> method accepts a regular expression pattern to
+find keys by prefix or pattern.</p>
 </div>
 <div class="section level2">
-<h2 id="context-builder">Context Builder<a class="anchor" aria-label="anchor" href="#context-builder"></a>
+<h2 id="next-steps">Next Steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
 </h2>
-<p>Assemble token-limited context with priorities:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">cb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/context_builder.html">context_builder</a></span><span class="op">(</span>max_tokens <span class="op">=</span> <span class="fl">500</span><span class="op">)</span></span>
-<span><span class="va">cb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cb_add.html">cb_add</a></span><span class="op">(</span><span class="va">cb</span>, <span class="st">"System instructions go here."</span>, priority <span class="op">=</span> <span class="fl">10</span>, label <span class="op">=</span> <span class="st">"system"</span><span class="op">)</span></span>
-<span><span class="va">cb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cb_add.html">cb_add</a></span><span class="op">(</span><span class="va">cb</span>, <span class="st">"Retrieved context from documents."</span>, priority <span class="op">=</span> <span class="fl">5</span>, label <span class="op">=</span> <span class="st">"context"</span><span class="op">)</span></span>
-<span><span class="va">cb</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cb_add.html">cb_add</a></span><span class="op">(</span><span class="va">cb</span>, <span class="st">"Chat history summary."</span>, priority <span class="op">=</span> <span class="fl">3</span>, label <span class="op">=</span> <span class="st">"history"</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cb_build.html">cb_build</a></span><span class="op">(</span><span class="va">cb</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">context</span><span class="op">)</span></span>
-<span><span class="va">result</span><span class="op">$</span><span class="va">included</span></span>
-<span><span class="va">result</span><span class="op">$</span><span class="va">excluded</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="integration">Integration<a class="anchor" aria-label="anchor" href="#integration"></a>
-</h2>
-<p>Use <code><a href="../reference/context_for_chat.html">context_for_chat()</a></code> to combine retrieval and context
-building:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/context_for_chat.html">context_for_chat</a></span><span class="op">(</span><span class="va">ret</span>, <span class="st">"statistics"</span>, max_tokens <span class="op">=</span> <span class="fl">2000</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">context</span><span class="op">)</span></span></code></pre></div>
-<p>Wrap a knowledge store for orchestr:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">mem</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_orchestr_memory.html">as_orchestr_memory</a></span><span class="op">(</span><span class="va">ks</span><span class="op">)</span></span>
-<span><span class="va">mem</span><span class="op">$</span><span class="fu">set</span><span class="op">(</span><span class="st">"key"</span>, <span class="st">"value"</span><span class="op">)</span></span>
-<span><span class="va">mem</span><span class="op">$</span><span class="fu">get</span><span class="op">(</span><span class="st">"key"</span><span class="op">)</span></span></code></pre></div>
+<p>This vignette introduced the foundational building blocks: documents,
+chunking strategies, and the knowledge store. The rest of the
+securecontext documentation covers the full pipeline:</p>
+<ul>
+<li>
+<strong><code><a href="../articles/retrieval-workflows.html">vignette("retrieval-workflows")</a></code></strong> –
+Build a complete RAG pipeline: TF-IDF embeddings, vector search,
+retrievers, and the <code><a href="../reference/context_for_chat.html">context_for_chat()</a></code> convenience
+function.</li>
+<li>
+<strong><code><a href="../articles/context-building.html">vignette("context-building")</a></code></strong> – Deep
+dive into the token-aware context builder: priority budgets, overflow
+behavior, and multi-source assembly.</li>
+<li>
+<strong><code><a href="../articles/orchestr-integration.html">vignette("orchestr-integration")</a></code></strong> –
+Wire retrieval into orchestr agent graphs with the memory adapter and
+retrieve-then-generate patterns.</li>
+</ul>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
