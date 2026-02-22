@@ -14,6 +14,7 @@ reference:
   - title: Documents
     contents:
       - document
+      - securecontext_document
       - is_document
 
   - title: Chunking
@@ -27,6 +28,7 @@ reference:
   - title: Embeddings
     contents:
       - new_embedder
+      - securecontext_embedder
       - embed_tfidf
       - embed_texts
 
@@ -41,12 +43,14 @@ reference:
   - title: Retrieval
     contents:
       - retriever
+      - securecontext_retriever
       - retrieve
       - add_documents
 
   - title: Context Building
     contents:
       - context_builder
+      - securecontext_context_builder
       - cb_add
       - cb_build
       - cb_reset
