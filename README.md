@@ -1,9 +1,20 @@
 # securecontext
 
+<!-- badges: start -->
+[![R-CMD-check](https://github.com/ian-flores/securecontext/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ian-flores/securecontext/actions/workflows/R-CMD-check.yaml)
+[![Codecov test coverage](https://codecov.io/gh/ian-flores/securecontext/graph/badge.svg)](https://app.codecov.io/gh/ian-flores/securecontext)
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![pkgdown](https://github.com/ian-flores/securecontext/actions/workflows/pkgdown.yaml/badge.svg)](https://ian-flores.github.io/securecontext/)
+<!-- badges: end -->
+
 > [!CAUTION]
 > **Alpha software.** This package is part of a broader effort by [Ian Flores Siaca](https://github.com/ian-flores) to develop proper AI infrastructure for the R ecosystem. It is under active development and should **not** be used in production until an official release is published. APIs may change without notice.
 
 Memory, knowledge persistence, RAG retrieval, and context management for R LLM agents.
+
+## Why securecontext?
+
+Most RAG solutions for LLM agents require sending your documents to external embedding APIs. securecontext takes a different approach: it builds **local TF-IDF embeddings** entirely in R, with no external API calls and no data leaving your machine. The package provides **token-aware chunking** that respects LLM context windows, splitting documents by sentence, paragraph, or recursively so chunks fit within token budgets. A built-in **knowledge store** with JSONL persistence lets agents retrieve relevant context across sessions without relying on third-party services. Everything runs locally, making it suitable for sensitive data, air-gapped environments, and workflows where data privacy matters.
 
 ## Part of the secure-r-dev Ecosystem
 
@@ -58,6 +69,74 @@ pak::pak("ian-flores/securecontext")
 - **Context builder** -- token-aware priority-based context assembly
 - **Integration helpers** -- works with orchestr and ellmer
 
+### Document Chunking
+
+Split text into manageable pieces using one of four strategies. `chunk_text()` dispatches to the appropriate strategy function:
+
+```r
+library(securecontext)
+
+text <- "First paragraph with several sentences.\n\nSecond paragraph here.\n\nThird."
+
+# Sentence-level splitting
+chunk_text(text, strategy = "sentence")
+#> [1] "First paragraph with several sentences." "Second paragraph here."
+#> [3] "Third."
+
+# Paragraph-level splitting
+chunk_text(text, strategy = "paragraph")
+#> [1] "First paragraph with several sentences." "Second paragraph here."
+#> [3] "Third."
+
+# Fixed-size chunks with overlap
+chunk_fixed(paste(rep("word", 200), collapse = " "), size = 100, overlap = 10)
+
+# Recursive splitting (tries paragraph -> newline -> sentence -> space)
+chunk_recursive(text, max_size = 80)
+```
+
+### Knowledge Store
+
+A persistent JSONL key-value store for agent memory. Entries are keyed strings with optional metadata and timestamps:
+
+```r
+# In-memory store
+ks <- knowledge_store$new()
+
+# Persistent store backed by a JSONL file
+ks <- knowledge_store$new(path = "agent-memory.jsonl")
+
+# Store and retrieve values
+ks$set("user_preference", "dark mode", metadata = list(source = "onboarding"))
+ks$get("user_preference")
+#> [1] "dark mode"
+
+# Search keys by regex
+ks$search("user_")
+#> [1] "user_preference"
+
+# List all keys and check size
+ks$list()
+ks$size()
+```
+
+### Context Builder
+
+Assemble token-aware context for LLM prompts. Higher-priority items are included first; lower-priority items are dropped when the token budget is exceeded:
+
+```r
+cb <- context_builder(max_tokens = 200)
+cb <- cb_add(cb, "System instructions go here.", priority = 10, label = "system")
+cb <- cb_add(cb, "Relevant retrieved passage.", priority = 5, label = "rag")
+cb <- cb_add(cb, "Nice-to-have background info.", priority = 1, label = "background")
+
+result <- cb_build(cb)
+result$context       # assembled text, highest priority first
+result$included      # labels of items that fit
+result$excluded      # labels of items that were dropped
+result$total_tokens  # token count of the assembled context
+```
+
 ## Quick start
 
 ```r
@@ -79,6 +158,20 @@ add_documents(ret, docs)
 result <- context_for_chat(ret, "statistical computing", max_tokens = 2000)
 cat(result$context)
 ```
+
+## Documentation
+
+securecontext ships with three vignettes covering common workflows:
+
+- **Getting Started with securecontext** -- package overview, core API, and basic retrieval (`vignette("securecontext")`)
+- **Retrieval Workflows** -- end-to-end RAG patterns, chunking strategies, and vector store persistence (`vignette("retrieval-workflows")`)
+- **RAG-Enabled Agents** -- integrating securecontext with orchestr for agent memory and context injection (`vignette("orchestr-integration")`)
+
+Full reference documentation is available at the [pkgdown site](https://ian-flores.github.io/securecontext/).
+
+## Contributing
+
+Contributions are welcome! Please file issues on GitHub and submit pull requests.
 
 ## License
 
