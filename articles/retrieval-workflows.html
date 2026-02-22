@@ -103,7 +103,7 @@ accessed with <code>@</code>.</p>
 <span></span>
 <span><span class="co"># S7 property access with @</span></span>
 <span><span class="va">doc_r</span><span class="op">@</span><span class="va">id</span></span>
-<span><span class="co">#&gt; [1] "doc_1e7a339c22ad"</span></span>
+<span><span class="co">#&gt; [1] "doc_1e094c63d4c"</span></span>
 <span><span class="va">doc_r</span><span class="op">@</span><span class="va">metadata</span></span>
 <span><span class="co">#&gt; $source</span></span>
 <span><span class="co">#&gt; [1] "intro"</span></span>
@@ -274,9 +274,9 @@ search.</p>
 <span><span class="va">hits</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/retrieve.html">retrieve</a></span><span class="op">(</span><span class="va">ret</span>, <span class="st">"machine learning"</span>, k <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">hits</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                         id     score</span></span>
-<span><span class="co">#&gt; 1 doc_1e7a26b68e48_chunk_4 0.3992843</span></span>
-<span><span class="co">#&gt; 2 doc_1e7a339c22ad_chunk_1 0.0000000</span></span>
-<span><span class="co">#&gt; 3 doc_1e7a339c22ad_chunk_2 0.0000000</span></span></code></pre></div>
+<span><span class="co">#&gt; 1 doc_1e09154c6160_chunk_4 0.3992843</span></span>
+<span><span class="co">#&gt; 2  doc_1e094c63d4c_chunk_1 0.0000000</span></span>
+<span><span class="co">#&gt; 3  doc_1e094c63d4c_chunk_2 0.0000000</span></span></code></pre></div>
 <p>The returned data frame contains chunk IDs and cosine similarity
 scores. Higher scores indicate greater relevance.</p>
 </div>

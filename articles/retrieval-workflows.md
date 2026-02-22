@@ -46,7 +46,7 @@ like C and Fortran.",
 
 # S7 property access with @
 doc_r@id
-#> [1] "doc_1e7a339c22ad"
+#> [1] "doc_1e094c63d4c"
 doc_r@metadata
 #> $source
 #> [1] "intro"
@@ -212,9 +212,9 @@ cat("Chunks in store:", vs_ret$size(), "\n\n")
 hits <- retrieve(ret, "machine learning", k = 3)
 print(hits)
 #>                         id     score
-#> 1 doc_1e7a26b68e48_chunk_4 0.3992843
-#> 2 doc_1e7a339c22ad_chunk_1 0.0000000
-#> 3 doc_1e7a339c22ad_chunk_2 0.0000000
+#> 1 doc_1e09154c6160_chunk_4 0.3992843
+#> 2  doc_1e094c63d4c_chunk_1 0.0000000
+#> 3  doc_1e094c63d4c_chunk_2 0.0000000
 ```
 
 The returned data frame contains chunk IDs and cosine similarity scores.

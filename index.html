@@ -51,10 +51,17 @@
   <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header"><h1 id="securecontext">securecontext<a class="anchor" aria-label="anchor" href="#securecontext"></a>
 </h1></div>
+<!-- badges: start -->
+
 <blockquote>
 <p>[!CAUTION] <strong>Alpha software.</strong> This package is part of a broader effort by <a href="https://github.com/ian-flores" class="external-link">Ian Flores Siaca</a> to develop proper AI infrastructure for the R ecosystem. It is under active development and should <strong>not</strong> be used in production until an official release is published. APIs may change without notice.</p>
 </blockquote>
 <p>Memory, knowledge persistence, RAG retrieval, and context management for R LLM agents.</p>
+<div class="section level2">
+<h2 id="why-securecontext">Why securecontext?<a class="anchor" aria-label="anchor" href="#why-securecontext"></a>
+</h2>
+<p>Most RAG solutions for LLM agents require sending your documents to external embedding APIs. securecontext takes a different approach: it builds <strong>local TF-IDF embeddings</strong> entirely in R, with no external API calls and no data leaving your machine. The package provides <strong>token-aware chunking</strong> that respects LLM context windows, splitting documents by sentence, paragraph, or recursively so chunks fit within token budgets. A built-in <strong>knowledge store</strong> with JSONL persistence lets agents retrieve relevant context across sessions without relying on third-party services. Everything runs locally, making it suitable for sensitive data, air-gapped environments, and workflows where data privacy matters.</p>
+</div>
 <div class="section level2">
 <h2 id="part-of-the-secure-r-dev-ecosystem">Part of the secure-r-dev Ecosystem<a class="anchor" aria-label="anchor" href="#part-of-the-secure-r-dev-ecosystem"></a>
 </h2>
@@ -144,11 +151,76 @@
 <li>
 <strong>Integration helpers</strong> – works with orchestr and ellmer</li>
 </ul>
+<div class="section level3">
+<h3 id="document-chunking">Document Chunking<a class="anchor" aria-label="anchor" href="#document-chunking"></a>
+</h3>
+<p>Split text into manageable pieces using one of four strategies. <code><a href="reference/chunk_text.html">chunk_text()</a></code> dispatches to the appropriate strategy function:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ian-flores.github.io/securecontext/">securecontext</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">text</span> <span class="op">&lt;-</span> <span class="st">"First paragraph with several sentences.\n\nSecond paragraph here.\n\nThird."</span></span>
+<span></span>
+<span><span class="co"># Sentence-level splitting</span></span>
+<span><span class="fu"><a href="reference/chunk_text.html">chunk_text</a></span><span class="op">(</span><span class="va">text</span>, strategy <span class="op">=</span> <span class="st">"sentence"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "First paragraph with several sentences." "Second paragraph here."</span></span>
+<span><span class="co">#&gt; [3] "Third."</span></span>
+<span></span>
+<span><span class="co"># Paragraph-level splitting</span></span>
+<span><span class="fu"><a href="reference/chunk_text.html">chunk_text</a></span><span class="op">(</span><span class="va">text</span>, strategy <span class="op">=</span> <span class="st">"paragraph"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "First paragraph with several sentences." "Second paragraph here."</span></span>
+<span><span class="co">#&gt; [3] "Third."</span></span>
+<span></span>
+<span><span class="co"># Fixed-size chunks with overlap</span></span>
+<span><span class="fu"><a href="reference/chunk_fixed.html">chunk_fixed</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="st">"word"</span>, <span class="fl">200</span><span class="op">)</span>, collapse <span class="op">=</span> <span class="st">" "</span><span class="op">)</span>, size <span class="op">=</span> <span class="fl">100</span>, overlap <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Recursive splitting (tries paragraph -&gt; newline -&gt; sentence -&gt; space)</span></span>
+<span><span class="fu"><a href="reference/chunk_recursive.html">chunk_recursive</a></span><span class="op">(</span><span class="va">text</span>, max_size <span class="op">=</span> <span class="fl">80</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="knowledge-store">Knowledge Store<a class="anchor" aria-label="anchor" href="#knowledge-store"></a>
+</h3>
+<p>A persistent JSONL key-value store for agent memory. Entries are keyed strings with optional metadata and timestamps:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># In-memory store</span></span>
+<span><span class="va">ks</span> <span class="op">&lt;-</span> <span class="va"><a href="reference/knowledge_store.html">knowledge_store</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Persistent store backed by a JSONL file</span></span>
+<span><span class="va">ks</span> <span class="op">&lt;-</span> <span class="va"><a href="reference/knowledge_store.html">knowledge_store</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>path <span class="op">=</span> <span class="st">"agent-memory.jsonl"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Store and retrieve values</span></span>
+<span><span class="va">ks</span><span class="op">$</span><span class="fu">set</span><span class="op">(</span><span class="st">"user_preference"</span>, <span class="st">"dark mode"</span>, metadata <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>source <span class="op">=</span> <span class="st">"onboarding"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">ks</span><span class="op">$</span><span class="fu">get</span><span class="op">(</span><span class="st">"user_preference"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "dark mode"</span></span>
+<span></span>
+<span><span class="co"># Search keys by regex</span></span>
+<span><span class="va">ks</span><span class="op">$</span><span class="fu">search</span><span class="op">(</span><span class="st">"user_"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "user_preference"</span></span>
+<span></span>
+<span><span class="co"># List all keys and check size</span></span>
+<span><span class="va">ks</span><span class="op">$</span><span class="fu">list</span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="va">ks</span><span class="op">$</span><span class="fu">size</span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="context-builder">Context Builder<a class="anchor" aria-label="anchor" href="#context-builder"></a>
+</h3>
+<p>Assemble token-aware context for LLM prompts. Higher-priority items are included first; lower-priority items are dropped when the token budget is exceeded:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cb</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/context_builder.html">context_builder</a></span><span class="op">(</span>max_tokens <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span>
+<span><span class="va">cb</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/cb_add.html">cb_add</a></span><span class="op">(</span><span class="va">cb</span>, <span class="st">"System instructions go here."</span>, priority <span class="op">=</span> <span class="fl">10</span>, label <span class="op">=</span> <span class="st">"system"</span><span class="op">)</span></span>
+<span><span class="va">cb</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/cb_add.html">cb_add</a></span><span class="op">(</span><span class="va">cb</span>, <span class="st">"Relevant retrieved passage."</span>, priority <span class="op">=</span> <span class="fl">5</span>, label <span class="op">=</span> <span class="st">"rag"</span><span class="op">)</span></span>
+<span><span class="va">cb</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/cb_add.html">cb_add</a></span><span class="op">(</span><span class="va">cb</span>, <span class="st">"Nice-to-have background info."</span>, priority <span class="op">=</span> <span class="fl">1</span>, label <span class="op">=</span> <span class="st">"background"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/cb_build.html">cb_build</a></span><span class="op">(</span><span class="va">cb</span><span class="op">)</span></span>
+<span><span class="va">result</span><span class="op">$</span><span class="va">context</span>       <span class="co"># assembled text, highest priority first</span></span>
+<span><span class="va">result</span><span class="op">$</span><span class="va">included</span>      <span class="co"># labels of items that fit</span></span>
+<span><span class="va">result</span><span class="op">$</span><span class="va">excluded</span>      <span class="co"># labels of items that were dropped</span></span>
+<span><span class="va">result</span><span class="op">$</span><span class="va">total_tokens</span>  <span class="co"># token count of the assembled context</span></span></code></pre></div>
+</div>
 </div>
 <div class="section level2">
 <h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
 </h2>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ian-flores.github.io/securecontext/">securecontext</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Create documents</span></span>
@@ -166,6 +238,25 @@
 <span><span class="co"># Retrieve relevant context</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/context_for_chat.html">context_for_chat</a></span><span class="op">(</span><span class="va">ret</span>, <span class="st">"statistical computing"</span>, max_tokens <span class="op">=</span> <span class="fl">2000</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">context</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
+</h2>
+<p>securecontext ships with three vignettes covering common workflows:</p>
+<ul>
+<li>
+<strong>Getting Started with securecontext</strong> – package overview, core API, and basic retrieval (<code><a href="articles/securecontext.html">vignette("securecontext")</a></code>)</li>
+<li>
+<strong>Retrieval Workflows</strong> – end-to-end RAG patterns, chunking strategies, and vector store persistence (<code><a href="articles/retrieval-workflows.html">vignette("retrieval-workflows")</a></code>)</li>
+<li>
+<strong>RAG-Enabled Agents</strong> – integrating securecontext with orchestr for agent memory and context injection (<code><a href="articles/orchestr-integration.html">vignette("orchestr-integration")</a></code>)</li>
+</ul>
+<p>Full reference documentation is available at the <a href="https://ian-flores.github.io/securecontext/">pkgdown site</a>.</p>
+</div>
+<div class="section level2">
+<h2 id="contributing">Contributing<a class="anchor" aria-label="anchor" href="#contributing"></a>
+</h2>
+<p>Contributions are welcome! Please file issues on GitHub and submit pull requests.</p>
 </div>
 <div class="section level2">
 <h2 id="license">License<a class="anchor" aria-label="anchor" href="#license"></a>
@@ -204,7 +295,15 @@
 </ul>
 </div>
 
-
+<div class="dev-status">
+<h2 data-toc-skip>Dev status</h2>
+<ul class="list-unstyled">
+<li><a href="https://github.com/ian-flores/securecontext/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/ian-flores/securecontext/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
+<li><a href="https://app.codecov.io/gh/ian-flores/securecontext" class="external-link"><img src="https://codecov.io/gh/ian-flores/securecontext/graph/badge.svg" alt="Codecov test coverage"></a></li>
+<li><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental" class="external-link"><img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Lifecycle: experimental"></a></li>
+<li><a href="https://ian-flores.github.io/securecontext/"><img src="https://github.com/ian-flores/securecontext/actions/workflows/pkgdown.yaml/badge.svg" alt="pkgdown"></a></li>
+</ul>
+</div>
 
   </aside>
 </div>
