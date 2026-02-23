@@ -34,6 +34,6 @@ vs <- vector_store$new(dims = emb@dims)
 ret <- retriever(vs, emb)
 add_documents(ret, document("The cat sat on the mat."))
 retrieve(ret, "cat", k = 1)
-#>                         id     score
-#> 1 doc_1b97590c62b1_chunk_1 0.5773503
+#>                                    id     score
+#> 1 doc_20260223024624_92169253_chunk_1 0.5773503
 ```

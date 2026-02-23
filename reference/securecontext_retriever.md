@@ -20,6 +20,10 @@ securecontext_retriever(store = NULL, embedder = NULL)
 
   A `securecontext_embedder` object.
 
+## Value
+
+A `securecontext_retriever` S7 object.
+
 ## Examples
 
 ``` r

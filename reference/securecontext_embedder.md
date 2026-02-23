@@ -18,6 +18,10 @@ securecontext_embedder(embed_fn = function() NULL, dims = integer(0))
 
   Integer, the dimensionality of the embedding space.
 
+## Value
+
+A `securecontext_embedder` S7 object.
+
 ## Examples
 
 ``` r

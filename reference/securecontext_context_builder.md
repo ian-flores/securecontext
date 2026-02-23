@@ -18,6 +18,10 @@ securecontext_context_builder(max_tokens = integer(0), items = list())
 
   List of content items with priority.
 
+## Value
+
+A `securecontext_context_builder` S7 object.
+
 ## Examples
 
 ``` r

@@ -35,5 +35,5 @@ doc
 #>  @ text    : chr "Hello world"
 #>  @ metadata:List of 1
 #>  .. $ source: chr "test"
-#>  @ id      : chr "doc_1b977bdcd338"
+#>  @ id      : chr "doc_20260223024623_5e9f4103"
 ```

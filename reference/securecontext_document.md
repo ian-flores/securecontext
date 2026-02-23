@@ -26,6 +26,10 @@ securecontext_document(
 
   Character string document identifier.
 
+## Value
+
+A `securecontext_document` S7 object.
+
 ## Examples
 
 ``` r

@@ -4,6 +4,10 @@ Knowledge Store
 
 Knowledge Store
 
+## Value
+
+An R6 object of class `knowledge_store`.
+
 ## Details
 
 Persistent JSONL key-value knowledge base. Each entry stores a key,

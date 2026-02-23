@@ -4,6 +4,10 @@ Vector Store
 
 Vector Store
 
+## Value
+
+An R6 object of class `vector_store`.
+
 ## Details
 
 In-memory vector store with cosine similarity search and RDS

@@ -37,6 +37,19 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.0" id="securecontext-010">securecontext 0.1.0<a class="anchor" aria-label="anchor" href="#securecontext-010"></a></h2>
 <ul><li>Initial CRAN release.</li>
+<li>S7-based <code>securecontext_document</code> class for representing text documents with metadata.</li>
+<li>
+<code><a href="../reference/chunk_text.html">chunk_text()</a></code> for splitting documents into overlapping chunks by token count.</li>
+<li>TF-IDF embedder (<code><a href="../reference/embed_tfidf.html">embed_tfidf()</a></code>) for local, dependency-free text embeddings.</li>
+<li>
+<code>vector_store</code> R6 class with cosine similarity search and RDS persistence.</li>
+<li>
+<code>knowledge_store</code> R6 class for persistent JSONL key-value storage.</li>
+<li>
+<code>context_builder</code> for token-aware, priority-based context assembly.</li>
+<li>
+<code><a href="../reference/count_tokens.html">count_tokens()</a></code> utility using word-based approximation.</li>
+<li>Optional integration with ‘ellmer’ and ‘orchestr’ for LLM agent workflows.</li>
 </ul></div>
   </main></div>
 
