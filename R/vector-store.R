@@ -2,6 +2,7 @@
 #'
 #' In-memory vector store with cosine similarity search and RDS persistence.
 #'
+#' @return An R6 object of class `vector_store`.
 #' @examples
 #' vs <- vector_store$new(dims = 3L)
 #' vs$add("id1", matrix(c(1, 0, 0), nrow = 1))

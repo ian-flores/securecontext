@@ -4,9 +4,9 @@
 \name{securecontext-package}
 \alias{securecontext}
 \alias{securecontext-package}
-\title{securecontext: Memory, Knowledge Persistence, and Context Management for R LLM Agents}
+\title{securecontext: Memory, Knowledge Persistence, and Context Management for Large Language Model Agents}
 \description{
-Provides memory, knowledge persistence, RAG retrieval, and token-aware context window management for R LLM agents. Includes document chunking, TF-IDF embeddings, vector search, persistent key-value knowledge stores, and priority-based context assembly.
+Provides memory, knowledge persistence, Retrieval-Augmented Generation (RAG) retrieval, and token-aware context window management for Large Language Model (LLM) agents. Includes document chunking, Term Frequency-Inverse Document Frequency (TF-IDF) embeddings, vector search, persistent key-value knowledge stores, and priority-based context assembly.
 }
 \seealso{
 Useful links:
@@ -18,7 +18,7 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Ian Flores Siaca \email{iflores.siaca@hey.com}
+\strong{Maintainer}: Ian Flores Siaca \email{iflores.siaca@hey.com} [copyright holder]
 
 }
 \keyword{internal}

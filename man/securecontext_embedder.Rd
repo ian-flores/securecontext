@@ -12,6 +12,9 @@ matrix.}
 
 \item{dims}{Integer, the dimensionality of the embedding space.}
 }
+\value{
+A \code{securecontext_embedder} S7 object.
+}
 \description{
 S7 class for securecontext embedders
 }

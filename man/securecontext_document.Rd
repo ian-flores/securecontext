@@ -17,6 +17,9 @@ securecontext_document(
 
 \item{id}{Character string document identifier.}
 }
+\value{
+A \code{securecontext_document} S7 object.
+}
 \description{
 S7 class for securecontext documents
 }

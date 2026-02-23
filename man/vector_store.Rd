@@ -3,6 +3,9 @@
 \name{vector_store}
 \alias{vector_store}
 \title{Vector Store}
+\value{
+An R6 object of class \code{vector_store}.
+}
 \description{
 Vector Store
 

@@ -3,6 +3,7 @@
 #' @param embed_fn A function taking a character vector and returning a numeric
 #'   matrix.
 #' @param dims Integer, the dimensionality of the embedding space.
+#' @return A `securecontext_embedder` S7 object.
 #' @name securecontext_embedder
 #' @examples
 #' emb <- embed_tfidf(c("hello world", "goodbye world"))

@@ -11,6 +11,9 @@ securecontext_context_builder(max_tokens = integer(0), items = list())
 
 \item{items}{List of content items with priority.}
 }
+\value{
+A \code{securecontext_context_builder} S7 object.
+}
 \description{
 S7 class for securecontext context builders
 }

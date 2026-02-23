@@ -2,6 +2,7 @@
 #'
 #' @param store A [vector_store] object.
 #' @param embedder A `securecontext_embedder` object.
+#' @return A `securecontext_retriever` S7 object.
 #' @name securecontext_retriever
 #' @examples
 #' emb <- embed_tfidf(c("cat sat on mat", "dog ran in park"))

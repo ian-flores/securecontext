@@ -3,7 +3,8 @@
 ^LICENSE\.md$
 ^README\.md$
 ^CLAUDE\.md$
-^_pkgdown\.yml$
+^_pkgdown\.ya?ml$
 ^\.github$
 ^\.gitignore$
 ^vignettes/.*\.html$
+^cran-comments\.md$

@@ -11,6 +11,9 @@ securecontext_retriever(store = NULL, embedder = NULL)
 
 \item{embedder}{A \code{securecontext_embedder} object.}
 }
+\value{
+A \code{securecontext_retriever} S7 object.
+}
 \description{
 S7 class for securecontext retrievers
 }

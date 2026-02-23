@@ -2,6 +2,7 @@
 #'
 #' @param max_tokens Integer, maximum number of tokens.
 #' @param items List of content items with priority.
+#' @return A `securecontext_context_builder` S7 object.
 #' @name securecontext_context_builder
 #' @examples
 #' cb <- context_builder(max_tokens = 100)

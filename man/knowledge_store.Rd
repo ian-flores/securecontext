@@ -3,6 +3,9 @@
 \name{knowledge_store}
 \alias{knowledge_store}
 \title{Knowledge Store}
+\value{
+An R6 object of class \code{knowledge_store}.
+}
 \description{
 Knowledge Store
 

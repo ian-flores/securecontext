@@ -3,6 +3,7 @@
 #' Persistent JSONL key-value knowledge base. Each entry stores a key, value,
 #' optional metadata, and timestamp.
 #'
+#' @return An R6 object of class `knowledge_store`.
 #' @examples
 #' ks <- knowledge_store$new()
 #' ks$set("color", "blue", metadata = list(source = "test"))

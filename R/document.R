@@ -3,6 +3,7 @@
 #' @param text Character string of document content.
 #' @param metadata Named list of arbitrary metadata.
 #' @param id Character string document identifier.
+#' @return A `securecontext_document` S7 object.
 #' @name securecontext_document
 #' @examples
 #' doc <- securecontext_document(
@@ -36,7 +37,8 @@ document <- function(text, metadata = list(), id = NULL) {
     cli_abort("{.arg metadata} must be a list.")
   }
   if (is.null(id)) {
-    id <- paste0("doc_", substr(tempfile(pattern = ""), nchar(tempdir()) + 2L, 100L))
+    id <- paste0("doc_", format(Sys.time(), "%Y%m%d%H%M%S"), "_",
+                  paste0(sample(c(0:9, letters[1:6]), 8, replace = TRUE), collapse = ""))
   }
   securecontext_document(text = text, metadata = metadata, id = id)
 }
