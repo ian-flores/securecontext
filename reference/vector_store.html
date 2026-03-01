@@ -69,13 +69,24 @@ Vector Store"></head><body>
 <h3 id="method-new-">Method <code>new()</code><a class="anchor" aria-label="anchor" href="#method-new-"></a></h3>
 <p>Create a new vector store.</p><div class="section">
 <h4 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va"><a href="../reference/vector_store.html">vector_store</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">dims</span><span class="op">)</span></span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va"><a href="../reference/vector_store.html">vector_store</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="va">dims</span>, encryption_key <span class="op">=</span> <span class="cn">NULL</span>, audit_log <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
 <h4 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>dims</code></dt>
 <dd><p>Integer, dimensionality of stored vectors.</p></dd>
+
+
+<dt><code>encryption_key</code></dt>
+<dd><p>Raw 32-byte key for AES-256-CBC encryption at rest,
+or <code>NULL</code> to check the <code>SECURECONTEXT_ENCRYPTION_KEY</code> env var. If neither
+is set, data is stored unencrypted.</p></dd>
+
+
+<dt><code>audit_log</code></dt>
+<dd><p>Optional path to a JSONL audit log file. If non-NULL,
+store operations are logged via <code><a href="log_store_event.html">log_store_event()</a></code>.</p></dd>
 
 
 </dl><p></p></div>

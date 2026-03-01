@@ -43,6 +43,11 @@
 - [`knowledge_store`](https://ian-flores.github.io/securecontext/reference/knowledge_store.md)
   : Knowledge Store
 
+## Encryption
+
+- [`new_encryption_key()`](https://ian-flores.github.io/securecontext/reference/new_encryption_key.md)
+  : Generate a new 32-byte encryption key
+
 ## Retrieval
 
 - [`retriever()`](https://ian-flores.github.io/securecontext/reference/retriever.md)

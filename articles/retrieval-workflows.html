@@ -142,7 +142,7 @@ came from. Documents are S7 objects, so properties are accessed with
 <span></span>
 <span><span class="co"># S7 property access with @</span></span>
 <span><span class="va">doc_r</span><span class="op">@</span><span class="va">id</span></span>
-<span><span class="co">#&gt; [1] "doc_20260223024631_c6be45ee"</span></span>
+<span><span class="co">#&gt; [1] "doc_20260301144207_c6be45ee"</span></span>
 <span><span class="va">doc_r</span><span class="op">@</span><span class="va">metadata</span></span>
 <span><span class="co">#&gt; $source</span></span>
 <span><span class="co">#&gt; [1] "intro"</span></span>
@@ -360,9 +360,9 @@ between ingest and query time.</p>
 <span><span class="va">hits</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/retrieve.html">retrieve</a></span><span class="op">(</span><span class="va">ret</span>, <span class="st">"machine learning"</span>, k <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">hits</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                                    id     score</span></span>
-<span><span class="co">#&gt; 1 doc_20260223024631_e35844e7_chunk_4 0.3992843</span></span>
-<span><span class="co">#&gt; 2 doc_20260223024631_c6be45ee_chunk_1 0.0000000</span></span>
-<span><span class="co">#&gt; 3 doc_20260223024631_c6be45ee_chunk_2 0.0000000</span></span></code></pre></div>
+<span><span class="co">#&gt; 1 doc_20260301144207_e35844e7_chunk_4 0.3992843</span></span>
+<span><span class="co">#&gt; 2 doc_20260301144207_c6be45ee_chunk_1 0.0000000</span></span>
+<span><span class="co">#&gt; 3 doc_20260301144207_c6be45ee_chunk_2 0.0000000</span></span></code></pre></div>
 <p>The returned data frame contains chunk IDs and cosine similarity
 scores. Higher scores indicate greater relevance. You can use these
 scores directly as priorities in the context builder (see

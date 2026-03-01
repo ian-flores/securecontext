@@ -45,13 +45,25 @@ Create a new knowledge store.
 
 #### Usage
 
-    knowledge_store$new(path = NULL)
+    knowledge_store$new(path = NULL, encryption_key = NULL, audit_log = NULL)
 
 #### Arguments
 
 - `path`:
 
   Optional file path for JSONL persistence. `NULL` for in-memory only.
+
+- `encryption_key`:
+
+  Raw 32-byte key for AES-256-CBC encryption at rest, or `NULL` to check
+  the `SECURECONTEXT_ENCRYPTION_KEY` env var. If neither is set, data is
+  stored unencrypted.
+
+- `audit_log`:
+
+  Optional path to a JSONL audit log file. If non-NULL, store operations
+  are logged via
+  [`log_store_event()`](https://ian-flores.github.io/securecontext/reference/log_store_event.md).
 
 ------------------------------------------------------------------------
 
