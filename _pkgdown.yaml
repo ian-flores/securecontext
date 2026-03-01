@@ -41,6 +41,10 @@ reference:
     contents:
       - knowledge_store
 
+  - title: Encryption
+    contents:
+      - new_encryption_key
+
   - title: Retrieval
     contents:
       - retriever
