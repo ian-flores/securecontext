@@ -2,25 +2,24 @@
 
 ## What is securecontext?
 
-Large language models are powerful, but they only know what they were
-trained on. When you need an LLM to answer questions about *your*
-documents – internal reports, package documentation, domain-specific
-knowledge – you need to feed that information into the model’s context
-window. This pattern is called **Retrieval-Augmented Generation (RAG)**.
+Large language models only know what they were trained on. When you need
+an LLM to answer questions about *your* documents (internal reports,
+package documentation, domain-specific knowledge), you feed that
+information into the model’s context window. This pattern is called
+Retrieval-Augmented Generation (RAG).
 
-securecontext provides a complete, local-first RAG pipeline for R. Every
-component – chunking, embedding, vector search, and context assembly –
-runs entirely on your machine with no external API calls. This matters
-for privacy-sensitive workloads: your documents never leave your
-environment.
+securecontext implements a complete, local-first RAG pipeline for R.
+Every component (chunking, embedding, vector search, and context
+assembly) runs entirely on your machine with no external API calls. Your
+documents never leave your environment.
 
-The package is also **token-aware**. LLMs have finite context windows,
-and naively stuffing retrieved text into a prompt wastes tokens or
-overflows the limit. securecontext’s context builder uses a
-priority-based budget system to pack the most important information
-first and transparently reports what was included and what was dropped.
+The package is also token-aware. LLMs have finite context windows, and
+naively stuffing retrieved text into a prompt wastes tokens or overflows
+the limit. securecontext’s context builder packs the most important
+information first under a priority-based budget and reports what was
+included and what was dropped.
 
-## The RAG Pipeline at a Glance
+## The RAG pipeline at a glance
 
 The following diagram shows the end-to-end flow from raw documents to an
 LLM-ready context string:
@@ -35,12 +34,11 @@ LLM-ready context string:
                                ()          $new()                   builder()
 
 Each step is independently useful, but they compose naturally into a
-pipeline. This vignette covers the first three building blocks:
-documents, chunking, and the knowledge store. For the full retrieval
-pipeline, see
+pipeline. The sections below cover three building blocks: documents,
+chunking, and the knowledge store. For the full retrieval pipeline, see
 [`vignette("retrieval-workflows")`](https://ian-flores.github.io/securecontext/articles/retrieval-workflows.md).
 
-## Documents and Chunking
+## Documents and chunking
 
 The
 [`document()`](https://ian-flores.github.io/securecontext/reference/document.md)
@@ -51,8 +49,8 @@ Chunking splits long text into smaller pieces suitable for embedding and
 retrieval. Smaller chunks improve search precision because the embedder
 can match a query against focused passages rather than entire documents.
 
-securecontext provides four chunking strategies, each suited to
-different content types:
+securecontext ships four chunking strategies, each suited to different
+content types:
 
 | Strategy      | How it splits                             | Best for                   |
 |:--------------|:------------------------------------------|:---------------------------|
@@ -82,15 +80,14 @@ Recursive chunking is more robust for mixed content because it tries
 larger separators first (double newlines, then single newlines, then
 spaces) before falling back to character splits.
 
-## Knowledge Store
+## Knowledge store
 
 The `knowledge_store` is a persistent key-value store backed by a JSONL
 file. Unlike the vector store (which is optimized for similarity
-search), the knowledge store is designed for structured facts that you
-look up by key – user preferences, session state, agent memory.
-
-Because it writes to a JSONL file, stored data survives across R
-sessions. This makes it suitable for agents that need durable memory.
+search), the knowledge store holds structured facts that you look up by
+key: user preferences, session state, agent memory. Stored data survives
+across R sessions, making it suitable for agents that need durable
+memory.
 
 ``` r
 ks <- knowledge_store$new(path = tempfile(fileext = ".jsonl"))
@@ -106,20 +103,19 @@ Keys are plain strings, and values can be any R object that `jsonlite`
 can serialize (lists, vectors, data frames). The `$search()` method
 accepts a regular expression pattern to find keys by prefix or pattern.
 
-## Next Steps
+## Next steps
 
-This vignette introduced the foundational building blocks: documents,
-chunking strategies, and the knowledge store. The rest of the
-securecontext documentation covers the full pipeline:
+With documents, chunking strategies, and the knowledge store in place,
+the rest of the securecontext documentation covers the full pipeline:
 
-- **[`vignette("retrieval-workflows")`](https://ian-flores.github.io/securecontext/articles/retrieval-workflows.md)**
-  – Build a complete RAG pipeline: TF-IDF embeddings, vector search,
+- [`vignette("retrieval-workflows")`](https://ian-flores.github.io/securecontext/articles/retrieval-workflows.md):
+  Build a complete RAG pipeline with TF-IDF embeddings, vector search,
   retrievers, and the
   [`context_for_chat()`](https://ian-flores.github.io/securecontext/reference/context_for_chat.md)
   convenience function.
-- **[`vignette("context-building")`](https://ian-flores.github.io/securecontext/articles/context-building.md)**
-  – Deep dive into the token-aware context builder: priority budgets,
+- [`vignette("context-building")`](https://ian-flores.github.io/securecontext/articles/context-building.md):
+  The token-aware context builder in depth, covering priority budgets,
   overflow behavior, and multi-source assembly.
-- **[`vignette("orchestr-integration")`](https://ian-flores.github.io/securecontext/articles/orchestr-integration.md)**
-  – Wire retrieval into orchestr agent graphs with the memory adapter
-  and retrieve-then-generate patterns.
+- [`vignette("orchestr-integration")`](https://ian-flores.github.io/securecontext/articles/orchestr-integration.md):
+  Wire retrieval into orchestr agent graphs with the memory adapter and
+  retrieve-then-generate patterns.

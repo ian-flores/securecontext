@@ -64,26 +64,23 @@
 <div class="section level2">
 <h2 id="what-is-securecontext">What is securecontext?<a class="anchor" aria-label="anchor" href="#what-is-securecontext"></a>
 </h2>
-<p>Large language models are powerful, but they only know what they were
-trained on. When you need an LLM to answer questions about <em>your</em>
-documents – internal reports, package documentation, domain-specific
-knowledge – you need to feed that information into the model’s context
-window. This pattern is called <strong>Retrieval-Augmented Generation
-(RAG)</strong>.</p>
-<p>securecontext provides a complete, local-first RAG pipeline for R.
-Every component – chunking, embedding, vector search, and context
-assembly – runs entirely on your machine with no external API calls.
-This matters for privacy-sensitive workloads: your documents never leave
-your environment.</p>
-<p>The package is also <strong>token-aware</strong>. LLMs have finite
-context windows, and naively stuffing retrieved text into a prompt
-wastes tokens or overflows the limit. securecontext’s context builder
-uses a priority-based budget system to pack the most important
-information first and transparently reports what was included and what
-was dropped.</p>
+<p>Large language models only know what they were trained on. When you
+need an LLM to answer questions about <em>your</em> documents (internal
+reports, package documentation, domain-specific knowledge), you feed
+that information into the model’s context window. This pattern is called
+Retrieval-Augmented Generation (RAG).</p>
+<p>securecontext implements a complete, local-first RAG pipeline for R.
+Every component (chunking, embedding, vector search, and context
+assembly) runs entirely on your machine with no external API calls. Your
+documents never leave your environment.</p>
+<p>The package is also token-aware. LLMs have finite context windows,
+and naively stuffing retrieved text into a prompt wastes tokens or
+overflows the limit. securecontext’s context builder packs the most
+important information first under a priority-based budget and reports
+what was included and what was dropped.</p>
 </div>
 <div class="section level2">
-<h2 id="the-rag-pipeline-at-a-glance">The RAG Pipeline at a Glance<a class="anchor" aria-label="anchor" href="#the-rag-pipeline-at-a-glance"></a>
+<h2 id="the-rag-pipeline-at-a-glance">The RAG pipeline at a glance<a class="anchor" aria-label="anchor" href="#the-rag-pipeline-at-a-glance"></a>
 </h2>
 <p>The following diagram shows the end-to-end flow from raw documents to
 an LLM-ready context string:</p>
@@ -96,12 +93,12 @@ an LLM-ready context string:</p>
  document()  chunk_text() embed_tfidf  vector_store retrieve()  context_    chat()
                            ()          $new()                   builder()</code></pre>
 <p>Each step is independently useful, but they compose naturally into a
-pipeline. This vignette covers the first three building blocks:
-documents, chunking, and the knowledge store. For the full retrieval
-pipeline, see <code><a href="../articles/retrieval-workflows.html">vignette("retrieval-workflows")</a></code>.</p>
+pipeline. The sections below cover three building blocks: documents,
+chunking, and the knowledge store. For the full retrieval pipeline, see
+<code><a href="../articles/retrieval-workflows.html">vignette("retrieval-workflows")</a></code>.</p>
 </div>
 <div class="section level2">
-<h2 id="documents-and-chunking">Documents and Chunking<a class="anchor" aria-label="anchor" href="#documents-and-chunking"></a>
+<h2 id="documents-and-chunking">Documents and chunking<a class="anchor" aria-label="anchor" href="#documents-and-chunking"></a>
 </h2>
 <p>The <code><a href="../reference/document.html">document()</a></code> function wraps raw text with metadata and
 an auto-generated identifier. Documents are the unit of ingestion
@@ -110,7 +107,7 @@ throughout the package.</p>
 and retrieval. Smaller chunks improve search precision because the
 embedder can match a query against focused passages rather than entire
 documents.</p>
-<p>securecontext provides four chunking strategies, each suited to
+<p>securecontext ships four chunking strategies, each suited to
 different content types:</p>
 <table class="table">
 <colgroup>
@@ -166,16 +163,14 @@ larger separators first (double newlines, then single newlines, then
 spaces) before falling back to character splits.</p>
 </div>
 <div class="section level2">
-<h2 id="knowledge-store">Knowledge Store<a class="anchor" aria-label="anchor" href="#knowledge-store"></a>
+<h2 id="knowledge-store">Knowledge store<a class="anchor" aria-label="anchor" href="#knowledge-store"></a>
 </h2>
 <p>The <code>knowledge_store</code> is a persistent key-value store
 backed by a JSONL file. Unlike the vector store (which is optimized for
-similarity search), the knowledge store is designed for structured facts
-that you look up by key – user preferences, session state, agent
-memory.</p>
-<p>Because it writes to a JSONL file, stored data survives across R
-sessions. This makes it suitable for agents that need durable
-memory.</p>
+similarity search), the knowledge store holds structured facts that you
+look up by key: user preferences, session state, agent memory. Stored
+data survives across R sessions, making it suitable for agents that need
+durable memory.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ks</span> <span class="op">&lt;-</span> <span class="va"><a href="../reference/knowledge_store.html">knowledge_store</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span>path <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".jsonl"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -190,25 +185,24 @@ memory.</p>
 find keys by prefix or pattern.</p>
 </div>
 <div class="section level2">
-<h2 id="next-steps">Next Steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
+<h2 id="next-steps">Next steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
 </h2>
-<p>This vignette introduced the foundational building blocks: documents,
-chunking strategies, and the knowledge store. The rest of the
-securecontext documentation covers the full pipeline:</p>
+<p>With documents, chunking strategies, and the knowledge store in
+place, the rest of the securecontext documentation covers the full
+pipeline:</p>
 <ul>
 <li>
-<strong><code><a href="../articles/retrieval-workflows.html">vignette("retrieval-workflows")</a></code></strong> –
-Build a complete RAG pipeline: TF-IDF embeddings, vector search,
-retrievers, and the <code><a href="../reference/context_for_chat.html">context_for_chat()</a></code> convenience
-function.</li>
+<code><a href="../articles/retrieval-workflows.html">vignette("retrieval-workflows")</a></code>: Build a complete RAG
+pipeline with TF-IDF embeddings, vector search, retrievers, and the
+<code><a href="../reference/context_for_chat.html">context_for_chat()</a></code> convenience function.</li>
 <li>
-<strong><code><a href="../articles/context-building.html">vignette("context-building")</a></code></strong> – Deep
-dive into the token-aware context builder: priority budgets, overflow
-behavior, and multi-source assembly.</li>
+<code><a href="../articles/context-building.html">vignette("context-building")</a></code>: The token-aware context
+builder in depth, covering priority budgets, overflow behavior, and
+multi-source assembly.</li>
 <li>
-<strong><code><a href="../articles/orchestr-integration.html">vignette("orchestr-integration")</a></code></strong> –
-Wire retrieval into orchestr agent graphs with the memory adapter and
-retrieve-then-generate patterns.</li>
+<code><a href="../articles/orchestr-integration.html">vignette("orchestr-integration")</a></code>: Wire retrieval into
+orchestr agent graphs with the memory adapter and retrieve-then-generate
+patterns.</li>
 </ul>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

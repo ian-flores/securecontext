@@ -1,24 +1,24 @@
 # Retrieval Workflows
 
-## Why Local Retrieval?
+## Why local retrieval?
 
 Retrieval-augmented generation (RAG) lets an LLM answer questions about
-your own documents – internal reports, package documentation, domain
-knowledge – by fetching relevant passages and injecting them into the
+your own documents (internal reports, package documentation, domain
+knowledge) by fetching relevant passages and injecting them into the
 prompt. Most RAG tooling requires sending your documents to an external
 embedding API, which introduces latency, cost, and privacy concerns.
 
-securecontext takes a **local-first** approach. Its TF-IDF embedder runs
+securecontext takes a local-first approach. Its TF-IDF embedder runs
 entirely in your R process: no API keys, no network calls, no data
 leaving your machine. This makes it suitable for air-gapped
 environments, privacy-sensitive workloads, and rapid prototyping where
 you want results without configuring external services.
 
-This vignette walks through the complete retrieval pipeline step by
-step. Every operation – document creation, chunking, embedding, vector
-search, knowledge storage, and context assembly – runs locally.
+The sections below cover the complete retrieval pipeline step by step.
+Every operation (document creation, chunking, embedding, vector search,
+knowledge storage, and context assembly) runs locally.
 
-## The Full RAG Pipeline
+## The full RAG pipeline
 
 The following diagram shows how data flows from raw documents to an
 LLM-ready context string:
@@ -45,7 +45,7 @@ packs results into a token budget before sending to an LLM.
 library(securecontext)
 ```
 
-## Step 1: Create Documents
+## Step 1: Create documents
 
 A
 [`document()`](https://ian-flores.github.io/securecontext/reference/document.md)
@@ -84,7 +84,7 @@ like C and Fortran.",
 
 # S7 property access with @
 doc_r@id
-#> [1] "doc_20260301144207_c6be45ee"
+#> [1] "doc_20260301203457_c6be45ee"
 doc_r@metadata
 #> $source
 #> [1] "intro"
@@ -93,7 +93,7 @@ doc_r@metadata
 #> [1] "R"
 ```
 
-## Step 2: Chunk Text
+## Step 2: Chunk text
 
 Chunking splits long text into smaller pieces suitable for embedding and
 retrieval. Smaller, focused chunks improve search precision because the
@@ -110,24 +110,24 @@ securecontext offers four strategies:
 | `"fixed"`     | Fixed character width with overlap        |
 | `"recursive"` | Hierarchical separators (LangChain-style) |
 
-### Choosing a Chunking Strategy
+### Choosing a chunking strategy
 
 The right strategy depends on your content and how users will query it:
 
-- **Sentence chunking** works best for narrative text (documentation,
+- Sentence chunking works best for narrative text (documentation,
   articles) where individual statements carry meaning. Queries like
   “What does dplyr do?” match well against single-sentence chunks.
 
-- **Paragraph chunking** preserves more context per chunk, which helps
-  when meaning spans multiple sentences. It works well for structured
+- Paragraph chunking preserves more context per chunk, which helps when
+  meaning spans multiple sentences. It works well for structured
   documents with clear paragraph breaks.
 
-- **Fixed-size chunking** guarantees uniform chunk lengths, which is
-  useful when downstream components expect consistent input sizes. The
+- Fixed-size chunking guarantees uniform chunk lengths, which is useful
+  when downstream components expect consistent input sizes. The
   `overlap` parameter ensures that information near chunk boundaries is
   not lost.
 
-- **Recursive chunking** is the most robust general-purpose strategy. It
+- Recursive chunking is the most robust general-purpose strategy. It
   tries larger separators first (double newlines, then single newlines,
   then spaces, then characters), producing natural-looking chunks that
   respect document structure. This is a good default when you are
@@ -189,7 +189,7 @@ for (i in seq_along(fixed_chunks)) {
 #> Chunk 5 (89 chars): l tidyverse packages share an underlying design philosophy, grammar, and data structures.
 ```
 
-## Step 3: Build a TF-IDF Embedder
+## Step 3: Build a TF-IDF embedder
 
 Embeddings are numerical representations of text that capture semantic
 similarity. Texts about similar topics produce vectors that are close
@@ -203,7 +203,7 @@ Document Frequency) weighs words by how important they are to a specific
 document relative to the corpus. Common words like “the” get low
 weights; distinctive words like “regression” get high weights.
 
-Everything runs locally – no API keys required.
+Everything runs locally; no API keys required.
 
 ``` r
 # Gather all document texts as the training corpus
@@ -221,7 +221,7 @@ cat("Query embedding shape:", nrow(query_matrix), "x", ncol(query_matrix), "\n")
 #> Query embedding shape: 1 x 79
 ```
 
-## Step 4: Vector Store
+## Step 4: Vector store
 
 The `vector_store` is an R6 class providing in-memory cosine-similarity
 search with optional RDS persistence. It stores embedding vectors keyed
@@ -270,7 +270,7 @@ cat("Loaded store size:", vs2$size(), "\n")
 unlink(tmp)
 ```
 
-## Step 5: Retriever – the High-Level Interface
+## Step 5: Retriever, the high-level interface
 
 The previous steps (chunk, embed, store, search) are the building
 blocks. The
@@ -282,8 +282,8 @@ to chunk, embed, and store documents in one call, then
 [`retrieve()`](https://ian-flores.github.io/securecontext/reference/retrieve.md)
 to search.
 
-This is the recommended interface for most applications – it reduces
-boilerplate and ensures that chunking and embedding are consistent
+This is the recommended interface for most applications. It reduces
+boilerplate and ensures that chunking and embedding stay consistent
 between ingest and query time.
 
 ``` r
@@ -302,9 +302,9 @@ cat("Chunks in store:", vs_ret$size(), "\n\n")
 hits <- retrieve(ret, "machine learning", k = 3)
 print(hits)
 #>                                    id     score
-#> 1 doc_20260301144207_e35844e7_chunk_4 0.3992843
-#> 2 doc_20260301144207_c6be45ee_chunk_1 0.0000000
-#> 3 doc_20260301144207_c6be45ee_chunk_2 0.0000000
+#> 1 doc_20260301203457_e35844e7_chunk_4 0.3992843
+#> 2 doc_20260301203457_c6be45ee_chunk_1 0.0000000
+#> 3 doc_20260301203457_c6be45ee_chunk_2 0.0000000
 ```
 
 The returned data frame contains chunk IDs and cosine similarity scores.
@@ -312,7 +312,7 @@ Higher scores indicate greater relevance. You can use these scores
 directly as priorities in the context builder (see
 [`vignette("context-building")`](https://ian-flores.github.io/securecontext/articles/context-building.md)).
 
-## Step 6: Knowledge Store
+## Step 6: Knowledge store
 
 The `knowledge_store` is an R6 class providing persistent key-value
 storage backed by JSONL. While the vector store is optimized for
@@ -356,17 +356,17 @@ ks$list()
 unlink(ks$.__enclos_env__$private$.path)
 ```
 
-## Step 7: Context Builder
+## Step 7: Context builder
 
 The
 [`context_builder()`](https://ian-flores.github.io/securecontext/reference/context_builder.md)
 assembles a token-limited context string from multiple sources,
 prioritizing the most important content. This is the final step before
-sending context to an LLM – it ensures you stay within the model’s
-context window while including the most relevant information.
+sending context to an LLM: it keeps you within the model’s context
+window while including the most relevant information.
 
-For a deep dive into priority strategies, overflow behavior, and
-multi-turn patterns, see
+For more on priority strategies, overflow behavior, and multi-turn
+patterns, see
 [`vignette("context-building")`](https://ian-flores.github.io/securecontext/articles/context-building.md).
 
 ``` r
@@ -424,7 +424,7 @@ cat("After reset -- included:", paste(result2$included, collapse = ", "), "\n")
 #> After reset -- included: system_v2
 ```
 
-## Full Pipeline: Retrieve and Build Context
+## Full pipeline: retrieve and build context
 
 [`context_for_chat()`](https://ian-flores.github.io/securecontext/reference/context_for_chat.md)
 combines retrieval and context building in a single call. Given a
@@ -461,24 +461,24 @@ cat("Total tokens:", context_result$total_tokens, "\n")
 
 The securecontext retrieval pipeline follows these steps:
 
-1.  **[`document()`](https://ian-flores.github.io/securecontext/reference/document.md)**
+1.  [`document()`](https://ian-flores.github.io/securecontext/reference/document.md)
     – wrap text with metadata
-2.  **[`chunk_text()`](https://ian-flores.github.io/securecontext/reference/chunk_text.md)**
+2.  [`chunk_text()`](https://ian-flores.github.io/securecontext/reference/chunk_text.md)
     – split into retrieval units
-3.  **[`embed_tfidf()`](https://ian-flores.github.io/securecontext/reference/embed_tfidf.md)**
+3.  [`embed_tfidf()`](https://ian-flores.github.io/securecontext/reference/embed_tfidf.md)
     – build a local embedder from a corpus
-4.  **`vector_store$new()`** – store and search embeddings
-5.  **[`retriever()`](https://ian-flores.github.io/securecontext/reference/retriever.md)** +
-    **[`add_documents()`](https://ian-flores.github.io/securecontext/reference/add_documents.md)**
+4.  `vector_store$new()` – store and search embeddings
+5.  [`retriever()`](https://ian-flores.github.io/securecontext/reference/retriever.md) +
+    [`add_documents()`](https://ian-flores.github.io/securecontext/reference/add_documents.md)
     – high-level ingest
-6.  **[`retrieve()`](https://ian-flores.github.io/securecontext/reference/retrieve.md)**
+6.  [`retrieve()`](https://ian-flores.github.io/securecontext/reference/retrieve.md)
     – semantic search
-7.  **`knowledge_store$new()`** – persistent key-value memory
-8.  **[`context_builder()`](https://ian-flores.github.io/securecontext/reference/context_builder.md)** +
-    **[`cb_add()`](https://ian-flores.github.io/securecontext/reference/cb_add.md)** +
-    **[`cb_build()`](https://ian-flores.github.io/securecontext/reference/cb_build.md)**
+7.  `knowledge_store$new()` – persistent key-value memory
+8.  [`context_builder()`](https://ian-flores.github.io/securecontext/reference/context_builder.md) +
+    [`cb_add()`](https://ian-flores.github.io/securecontext/reference/cb_add.md) +
+    [`cb_build()`](https://ian-flores.github.io/securecontext/reference/cb_build.md)
     – token-aware assembly
-9.  **[`context_for_chat()`](https://ian-flores.github.io/securecontext/reference/context_for_chat.md)**
+9.  [`context_for_chat()`](https://ian-flores.github.io/securecontext/reference/context_for_chat.md)
     – one-call retrieve-and-build
 
 For more on context building strategies, see
