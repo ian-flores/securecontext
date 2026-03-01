@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-## Why Context Building Matters
+## Why context building matters
 
 LLMs have finite context windows. A typical model accepts between 4,000 and
 128,000 tokens, and every token you spend on context is a token you cannot
@@ -26,11 +26,10 @@ chunks, conversation history, and user instructions all compete for space.
 Naive approaches (concatenate everything, hope it fits) fail in predictable
 ways: either the prompt is truncated silently, or the model ignores information
 buried in the middle of a long context. securecontext's `context_builder()`
-solves this with a **priority-based token budget** system that gives you
-explicit control over what gets included and transparent reporting on what
-gets dropped.
+solves this with a priority-based token budget that gives you explicit control
+over what gets included and clear reporting on what gets dropped.
 
-## How the Context Builder Works
+## How the context builder works
 
 The builder follows a simple algorithm:
 
@@ -74,7 +73,7 @@ budget cannot accommodate the next item, that item (and all lower-priority
 items) are excluded. The builder reports both lists, so you always know exactly
 what the LLM will see and what it will not.
 
-## Basic Usage
+## Basic usage
 
 Create a builder with a token budget, add content with priorities, and build
 the final context string.
@@ -113,12 +112,12 @@ Retrieved chunks are then packed in priority order until the budget is
 exhausted. The `$excluded` field tells you exactly which chunks were dropped,
 which is valuable for debugging and logging in production agents.
 
-## Priority Design Patterns
+## Priority design patterns
 
 Choosing priority values is a design decision that depends on your application.
 Here are common patterns:
 
-**Fixed tiers** assign priorities by content type:
+Fixed tiers assign priorities by content type:
 
 | Priority | Content type        | Rationale                              |
 |---------:|:--------------------|:---------------------------------------|
@@ -128,7 +127,7 @@ Here are common patterns:
 | 3        | Conversation history| Helpful but expendable                 |
 | 1        | Disclaimers/footers | Include only if space permits           |
 
-**Dynamic priorities** use retrieval scores directly. When you retrieve chunks
+Dynamic priorities use retrieval scores directly. When you retrieve chunks
 with cosine similarity scores, you can pass those scores as priorities so the
 most relevant chunks are included first:
 
@@ -151,7 +150,7 @@ cat("Excluded:", paste(result$excluded, collapse = ", "), "\n")
 cat("Total tokens:", result$total_tokens, "\n")
 ```
 
-## Resetting Between Turns
+## Resetting between turns
 
 In a multi-turn conversation, you typically rebuild the context for each turn --
 the retrieved chunks change, the conversation history grows, and the system
@@ -168,7 +167,7 @@ cat("After reset -- included:", paste(result2$included, collapse = ", "), "\n")
 This avoids the overhead of creating a new builder object each turn and makes
 intent clear: this is a fresh context assembly for a new turn.
 
-## The `context_for_chat()` Shortcut
+## The `context_for_chat()` shortcut
 
 For the common case of "retrieve chunks and build a context string,"
 `context_for_chat()` combines both steps in a single call. It retrieves the
@@ -181,5 +180,5 @@ cat(result$context)
 
 Under the hood, this creates a context builder, adds each retrieved chunk with
 its similarity score as the priority, and returns the built result. It is a
-convenience wrapper -- when you need more control (e.g., adding a system prompt
+convenience wrapper; when you need more control (e.g., adding a system prompt
 or conversation history alongside retrieved chunks), use the builder directly.

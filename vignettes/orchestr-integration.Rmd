@@ -15,34 +15,32 @@ knitr::opts_chunk$set(
 )
 ```
 
-## Why Integrate Retrieval with Orchestration?
+## Why integrate retrieval with orchestration?
 
-An LLM agent that can retrieve information from a knowledge base before
-answering is fundamentally more capable than one that relies solely on its
-training data. But retrieval alone is not enough -- you also need to decide
-*when* to retrieve, *how much* context to include, and *where* to store what
-the agent learns. These are orchestration concerns.
+An LLM agent that retrieves information from a knowledge base before answering
+can ground its responses in your documents rather than relying on training data
+alone. But retrieval alone is not enough -- you also need to decide *when* to
+retrieve, *how much* context to include, and *where* to store what the agent
+learns. These are orchestration concerns.
 
-securecontext handles the retrieval side: document ingestion, embedding, vector
-search, and token-aware context assembly. orchestr handles the orchestration
-side: defining agent workflows as directed graphs, managing state between
-nodes, and routing execution. Together, they let you build RAG agents where
-retrieval is a first-class step in the workflow, not an afterthought bolted
-onto a prompt.
+securecontext handles document ingestion, embedding, vector search, and
+token-aware context assembly. orchestr defines agent workflows as directed
+graphs, manages state between nodes, and routes execution. Together, they let
+you build RAG agents where retrieval is an explicit graph node with its own
+inputs, outputs, and tests.
 
-This vignette shows how to connect the two packages using the memory adapter
-pattern and graph-based retrieve-then-generate workflows.
+The sections below connect the two packages using the memory adapter pattern and
+graph-based retrieve-then-generate workflows.
 
 For securecontext basics, see `vignette("securecontext")` and
 `vignette("retrieval-workflows")`. For orchestr basics, see
 `vignette("quickstart", package = "orchestr")`.
 
-## Building a Knowledge Base
+## Building a knowledge base
 
 Start by creating documents, chunking them, and loading them into a retriever.
 This is the same pipeline from `vignette("retrieval-workflows")`, repeated
-here for completeness. Everything runs locally -- no external API calls
-required.
+here for completeness. Everything runs locally; no external API calls required.
 
 ```{r knowledge-base}
 library(securecontext)
@@ -73,7 +71,7 @@ ret <- retriever(vs, embedder)
 add_documents(ret, docs, chunk_strategy = "sentence")
 ```
 
-## The `as_orchestr_memory()` Adapter
+## The `as_orchestr_memory()` adapter
 
 orchestr agents expect a memory backend with `get()` and `set()` methods.
 securecontext's `knowledge_store` provides persistent key-value storage backed
@@ -83,7 +81,7 @@ box. The `as_orchestr_memory()` function bridges this gap.
 The adapter pattern is simple: wrap a securecontext object in a thin layer that
 exposes the interface another package expects. The underlying storage,
 persistence, and search capabilities of the knowledge store are fully
-preserved -- the adapter just translates method calls.
+preserved; the adapter just translates method calls.
 
 ```{r memory-adapter}
 # Create a persistent knowledge store
@@ -104,7 +102,7 @@ restarts. You can also access the knowledge store directly (via `ks`) to use
 features like `$search()` and `$list()` that are not part of the orchestr
 memory interface.
 
-## Retrieval-in-the-Loop Graph
+## Retrieval-in-the-loop graph
 
 The core RAG pattern is: retrieve relevant context before each LLM call. With
 orchestr's `graph_builder()`, you wire this as a two-node graph: a retrieval
@@ -182,7 +180,7 @@ vector store and assembles a context string. The agent node then answers using
 that context. Because the context builder enforces a token budget, the agent
 node always receives a prompt that fits within the model's context window.
 
-## Token Budget Management
+## Token budget management
 
 When your knowledge base is large, retrieved chunks may exceed the LLM's context
 window. The `context_builder()` controls this with a token budget and priorities.
@@ -220,12 +218,12 @@ cb <- cb_reset(cb)
 # Now add fresh content for the next turn
 ```
 
-## Persistent Knowledge Store
+## Persistent knowledge store
 
 For agents that need memory across sessions, `knowledge_store` persists to a
 JSONL file. Combined with the orchestr memory adapter, this gives agents
-durable recall -- the agent can remember user preferences, past queries, and
-learned facts across restarts.
+durable recall: the agent remembers user preferences, past queries, and learned
+facts across restarts.
 
 ```{r persistent}
 # Knowledge store persists to disk
@@ -248,13 +246,13 @@ ks$search("^session")
 mem <- as_orchestr_memory(ks)
 ```
 
-## Putting It All Together
+## Putting it all together
 
 Here is a complete RAG agent that combines retrieval, token management, and
-persistent memory in an orchestr graph. This represents a production-ready
-pattern: documents are ingested into a local vector store, queries trigger
-retrieval and context assembly, the LLM answers using grounded context, and
-the agent persists what it learns for future sessions.
+persistent memory in an orchestr graph. Documents are ingested into a local
+vector store, queries trigger retrieval and context assembly, the LLM answers
+using grounded context, and the agent persists what it learns for future
+sessions.
 
 ```{r full-example}
 library(securecontext)
