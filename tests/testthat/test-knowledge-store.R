@@ -54,3 +54,49 @@ test_that("knowledge_store$set() validates key", {
   ks <- knowledge_store$new()
   expect_error(ks$set(123, "value"), "must be a single character string")
 })
+
+test_that("knowledge_store encrypted save/load round-trip", {
+  skip_if_not_installed("openssl")
+  key <- new_encryption_key()
+  path <- tempfile(fileext = ".enc")
+  on.exit(unlink(path), add = TRUE)
+
+  ks <- knowledge_store$new(path = path, encryption_key = key)
+  ks$set("key1", "value1")
+  ks$set("key2", list(a = 1, b = 2))
+  expect_true(file.exists(path))
+
+  # Encrypted file should not be readable as plain JSONL
+  raw_content <- readBin(path, "raw", file.info(path)$size)
+  parsed <- tryCatch(
+    jsonlite::fromJSON(rawToChar(raw_content)),
+    error = function(e) NULL
+  )
+  expect_null(parsed)
+
+  ks2 <- knowledge_store$new(path = path, encryption_key = key)
+  expect_equal(ks2$get("key1"), "value1")
+  expect_equal(ks2$get("key2")$a, 1)
+  expect_equal(ks2$size(), 2L)
+})
+
+test_that("knowledge_store search() handles invalid regex safely", {
+  ks <- knowledge_store$new()
+  ks$set("user.name", "Alice")
+  ks$set("user.age", 30)
+
+  expect_warning(
+    result <- ks$search("[invalid"),
+    "Invalid regex"
+  )
+  expect_equal(result, character())
+})
+
+test_that("knowledge_store search() still works with valid regex", {
+  ks <- knowledge_store$new()
+  ks$set("user.name", "Alice")
+  ks$set("config.theme", "dark")
+
+  result <- ks$search("^user")
+  expect_equal(result, "user.name")
+})

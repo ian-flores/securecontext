@@ -40,13 +40,20 @@ vs$size()
 \subsection{Method \code{new()}}{
 Create a new vector store.
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{vector_store$new(dims)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{vector_store$new(dims, encryption_key = NULL, audit_log = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{dims}}{Integer, dimensionality of stored vectors.}
+
+\item{\code{encryption_key}}{Raw 32-byte key for AES-256-CBC encryption at rest,
+or \code{NULL} to check the \code{SECURECONTEXT_ENCRYPTION_KEY} env var. If neither
+is set, data is stored unencrypted.}
+
+\item{\code{audit_log}}{Optional path to a JSONL audit log file. If non-NULL,
+store operations are logged via \code{\link[=log_store_event]{log_store_event()}}.}
 }
 \if{html}{\out{</div>}}
 }

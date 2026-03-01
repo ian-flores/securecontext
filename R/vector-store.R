@@ -15,11 +15,18 @@ vector_store <- R6::R6Class(
   public = list(
     #' @description Create a new vector store.
     #' @param dims Integer, dimensionality of stored vectors.
-    initialize = function(dims) {
+    #' @param encryption_key Raw 32-byte key for AES-256-CBC encryption at rest,
+    #'   or `NULL` to check the `SECURECONTEXT_ENCRYPTION_KEY` env var. If neither
+    #'   is set, data is stored unencrypted.
+    #' @param audit_log Optional path to a JSONL audit log file. If non-NULL,
+    #'   store operations are logged via [log_store_event()].
+    initialize = function(dims, encryption_key = NULL, audit_log = NULL) {
       private$.dims <- as.integer(dims)
       private$.ids <- character()
       private$.embeddings <- matrix(numeric(0L), nrow = 0L, ncol = private$.dims)
       private$.metadata <- list()
+      private$.encryption_key <- resolve_encryption_key(encryption_key)
+      private$.audit_log <- audit_log
     },
 
     #' @description Add vectors to the store.
@@ -55,6 +62,9 @@ vector_store <- R6::R6Class(
       private$.ids <- c(private$.ids, ids)
       private$.embeddings <- rbind(private$.embeddings, embeddings)
       private$.metadata <- c(private$.metadata, metadata)
+      if (!is.null(private$.audit_log)) {
+        log_store_event(private$.audit_log, "add", list(ids = ids))
+      }
       invisible(self)
     },
 
@@ -81,6 +91,10 @@ vector_store <- R6::R6Class(
       k <- min(k, length(scores))
       top_idx <- order(scores, decreasing = TRUE)[seq_len(k)]
 
+      if (!is.null(private$.audit_log)) {
+        log_store_event(private$.audit_log, "search", list(k = k))
+      }
+
       data.frame(
         id = private$.ids[top_idx],
         score = scores[top_idx],
@@ -95,6 +109,9 @@ vector_store <- R6::R6Class(
       private$.ids <- private$.ids[keep]
       private$.embeddings <- private$.embeddings[keep, , drop = FALSE]
       private$.metadata <- private$.metadata[keep]
+      if (!is.null(private$.audit_log)) {
+        log_store_event(private$.audit_log, "remove", list(ids = ids))
+      }
       invisible(self)
     },
 
@@ -107,23 +124,65 @@ vector_store <- R6::R6Class(
     #' @description Save store to an RDS file.
     #' @param path File path.
     save = function(path) {
-      saveRDS(list(
+      data <- list(
         dims = private$.dims,
         ids = private$.ids,
         embeddings = private$.embeddings,
         metadata = private$.metadata
-      ), path)
+      )
+      if (!is.null(private$.encryption_key)) {
+        raw_data <- serialize(data, NULL)
+        encrypted <- encrypt_raw(raw_data, private$.encryption_key)
+        writeBin(encrypted, path)
+      } else {
+        saveRDS(data, path)
+      }
+      if (!is.null(private$.audit_log)) {
+        log_store_event(private$.audit_log, "save", list(path = path))
+      }
       invisible(self)
     },
 
     #' @description Load store from an RDS file.
     #' @param path File path.
     load = function(path) {
-      data <- readRDS(path)
+      if (!is.null(private$.encryption_key)) {
+        raw_data <- readBin(path, "raw", file.info(path)$size)
+        decrypted <- decrypt_raw(raw_data, private$.encryption_key)
+        data <- unserialize(decrypted)
+      } else {
+        data <- readRDS(path)
+      }
+      if (!is.list(data)) {
+        cli_abort("Invalid vector store file: expected a list, got {.cls {class(data)}}.")
+      }
+      required <- c("dims", "ids", "embeddings", "metadata")
+      missing_fields <- setdiff(required, names(data))
+      if (length(missing_fields) > 0L) {
+        cli_abort(
+          "Invalid vector store file: missing required fields {.val {missing_fields}}."
+        )
+      }
+      # Type validation
+      if (!is.numeric(data$dims) || length(data$dims) != 1L) {
+        cli_abort("Invalid vector store file: {.field dims} must be a single integer.")
+      }
+      if (!is.character(data$ids)) {
+        cli_abort("Invalid vector store file: {.field ids} must be a character vector.")
+      }
+      if (!is.matrix(data$embeddings) || !is.numeric(data$embeddings)) {
+        cli_abort("Invalid vector store file: {.field embeddings} must be a numeric matrix.")
+      }
+      if (!is.list(data$metadata)) {
+        cli_abort("Invalid vector store file: {.field metadata} must be a list.")
+      }
       private$.dims <- data$dims
       private$.ids <- data$ids
       private$.embeddings <- data$embeddings
       private$.metadata <- data$metadata
+      if (!is.null(private$.audit_log)) {
+        log_store_event(private$.audit_log, "load", list(path = path))
+      }
       invisible(self)
     }
   ),
@@ -131,6 +190,8 @@ vector_store <- R6::R6Class(
     .dims = NULL,
     .ids = NULL,
     .embeddings = NULL,
-    .metadata = NULL
+    .metadata = NULL,
+    .encryption_key = NULL,
+    .audit_log = NULL
   )
 )

@@ -25,6 +25,7 @@ Imports:
 Suggests:
     ellmer,
     knitr,
+    openssl,
     orchestr,
     rmarkdown,
     testthat (>= 3.0.0),
