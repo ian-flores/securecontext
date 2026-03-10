@@ -15,12 +15,28 @@ chunk_text <- function(text, strategy = c("fixed", "sentence", "paragraph", "rec
   if (!is.character(text) || length(text) != 1L) {
     cli_abort("{.arg text} must be a single character string.")
   }
-  switch(strategy,
-    fixed = chunk_fixed(text, ...),
-    sentence = chunk_sentence(text, ...),
-    paragraph = chunk_paragraph(text, ...),
-    recursive = chunk_recursive(text, ...)
-  )
+
+  .do_chunk <- function() {
+    switch(strategy,
+      fixed = chunk_fixed(text, ...),
+      sentence = chunk_sentence(text, ...),
+      paragraph = chunk_paragraph(text, ...),
+      recursive = chunk_recursive(text, ...)
+    )
+  }
+
+  if (.trace_active()) {
+    securetrace::with_span("context.chunk_text", type = "custom", {
+      result <- .do_chunk()
+      .span_event("chunk.complete", list(
+        strategy = strategy,
+        chunk_count = length(result)
+      ))
+      result
+    })
+  } else {
+    .do_chunk()
+  }
 }
 
 #' Fixed-size text chunking

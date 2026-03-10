@@ -44,28 +44,42 @@ vector_store <- R6::R6Class(
         cli_abort("Number of rows in {.arg embeddings} must match length of {.arg ids}.")
       }
 
-      # Normalize rows
-      norms <- sqrt(rowSums(embeddings^2))
-      norms[norms == 0] <- 1
-      embeddings <- embeddings / norms
+      .do_add <- function() {
+        # Normalize rows
+        norms <- sqrt(rowSums(embeddings^2))
+        norms[norms == 0] <- 1
+        embeddings <- embeddings / norms
 
-      if (length(metadata) == 0L) {
-        metadata <- rep(list(list()), length(ids))
+        if (length(metadata) == 0L) {
+          metadata <- rep(list(list()), length(ids))
+        }
+
+        # Remove duplicates
+        existing <- ids %in% private$.ids
+        if (any(existing)) {
+          self$remove(ids[existing])
+        }
+
+        private$.ids <- c(private$.ids, ids)
+        private$.embeddings <- rbind(private$.embeddings, embeddings)
+        private$.metadata <- c(private$.metadata, metadata)
+        if (!is.null(private$.audit_log)) {
+          log_store_event(private$.audit_log, "add", list(ids = ids))
+        }
+        invisible(self)
       }
 
-      # Remove duplicates
-      existing <- ids %in% private$.ids
-      if (any(existing)) {
-        self$remove(ids[existing])
+      if (.trace_active()) {
+        securetrace::with_span("context.vector_add", type = "custom", {
+          result <- .do_add()
+          .span_event("vector_add.complete", list(
+            count = length(ids)
+          ))
+          result
+        })
+      } else {
+        .do_add()
       }
-
-      private$.ids <- c(private$.ids, ids)
-      private$.embeddings <- rbind(private$.embeddings, embeddings)
-      private$.metadata <- c(private$.metadata, metadata)
-      if (!is.null(private$.audit_log)) {
-        log_store_event(private$.audit_log, "add", list(ids = ids))
-      }
-      invisible(self)
     },
 
     #' @description Search for nearest neighbors by cosine similarity.
@@ -83,23 +97,38 @@ vector_store <- R6::R6Class(
         return(data.frame(id = character(), score = numeric(), stringsAsFactors = FALSE))
       }
 
-      # Normalize query
-      qnorm <- sqrt(sum(query_embedding^2))
-      if (qnorm > 0) query_embedding <- query_embedding / qnorm
+      .do_search <- function() {
+        # Normalize query
+        qnorm <- sqrt(sum(query_embedding^2))
+        if (qnorm > 0) query_embedding <- query_embedding / qnorm
 
-      scores <- as.numeric(private$.embeddings %*% query_embedding)
-      k <- min(k, length(scores))
-      top_idx <- order(scores, decreasing = TRUE)[seq_len(k)]
+        scores <- as.numeric(private$.embeddings %*% query_embedding)
+        k_actual <- min(k, length(scores))
+        top_idx <- order(scores, decreasing = TRUE)[seq_len(k_actual)]
 
-      if (!is.null(private$.audit_log)) {
-        log_store_event(private$.audit_log, "search", list(k = k))
+        if (!is.null(private$.audit_log)) {
+          log_store_event(private$.audit_log, "search", list(k = k_actual))
+        }
+
+        data.frame(
+          id = private$.ids[top_idx],
+          score = scores[top_idx],
+          stringsAsFactors = FALSE
+        )
       }
 
-      data.frame(
-        id = private$.ids[top_idx],
-        score = scores[top_idx],
-        stringsAsFactors = FALSE
-      )
+      if (.trace_active()) {
+        securetrace::with_span("context.vector_search", type = "custom", {
+          result <- .do_search()
+          .span_event("vector_search.complete", list(
+            k = k,
+            result_count = nrow(result)
+          ))
+          result
+        })
+      } else {
+        .do_search()
+      }
     },
 
     #' @description Remove vectors by id.

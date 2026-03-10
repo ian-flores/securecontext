@@ -51,56 +51,70 @@ embed_tfidf <- function(corpus) {
     cli_abort("{.arg corpus} must be a non-empty character vector.")
   }
 
-  # Tokenize
-  tokenize <- function(texts) {
-    lapply(texts, function(txt) {
-      tokens <- strsplit(tolower(trimws(txt)), "\\s+")[[1L]]
-      tokens[nzchar(tokens)]
-    })
-  }
-
-  corpus_tokens <- tokenize(corpus)
-  n_docs <- length(corpus)
-
-  # Build vocabulary
-  vocab <- sort(unique(unlist(corpus_tokens)))
-  if (length(vocab) == 0L) {
-    cli_abort("Corpus produced an empty vocabulary.")
-  }
-  vocab_index <- stats::setNames(seq_along(vocab), vocab)
-
-  # Compute IDF: log(N / df) where df = number of docs containing term
-  doc_freq <- integer(length(vocab))
-  for (tokens in corpus_tokens) {
-    present <- unique(tokens)
-    idx <- vocab_index[present]
-    idx <- idx[!is.na(idx)]
-    doc_freq[idx] <- doc_freq[idx] + 1L
-  }
-  idf <- log(n_docs / pmax(doc_freq, 1L))
-
-  dims <- length(vocab)
-
-  embed_fn <- function(texts) {
-    tok_list <- tokenize(texts)
-    mat <- matrix(0, nrow = length(texts), ncol = dims)
-    for (i in seq_along(tok_list)) {
-      tokens <- tok_list[[i]]
-      if (length(tokens) == 0L) next
-      # Term frequency
-      tab <- table(tokens)
-      idx <- vocab_index[names(tab)]
-      valid <- !is.na(idx)
-      if (!any(valid)) next
-      mat[i, idx[valid]] <- as.numeric(tab[valid]) * idf[idx[valid]]
+  .do_embed_tfidf <- function() {
+    # Tokenize
+    tokenize <- function(texts) {
+      lapply(texts, function(txt) {
+        tokens <- strsplit(tolower(trimws(txt)), "\\s+")[[1L]]
+        tokens[nzchar(tokens)]
+      })
     }
-    # Normalize rows to unit length
-    norms <- sqrt(rowSums(mat^2))
-    norms[norms == 0] <- 1
-    mat / norms
+
+    corpus_tokens <- tokenize(corpus)
+    n_docs <- length(corpus)
+
+    # Build vocabulary
+    vocab <- sort(unique(unlist(corpus_tokens)))
+    if (length(vocab) == 0L) {
+      cli_abort("Corpus produced an empty vocabulary.")
+    }
+    vocab_index <- stats::setNames(seq_along(vocab), vocab)
+
+    # Compute IDF: log(N / df) where df = number of docs containing term
+    doc_freq <- integer(length(vocab))
+    for (tokens in corpus_tokens) {
+      present <- unique(tokens)
+      idx <- vocab_index[present]
+      idx <- idx[!is.na(idx)]
+      doc_freq[idx] <- doc_freq[idx] + 1L
+    }
+    idf <- log(n_docs / pmax(doc_freq, 1L))
+
+    dims <- length(vocab)
+
+    embed_fn <- function(texts) {
+      tok_list <- tokenize(texts)
+      mat <- matrix(0, nrow = length(texts), ncol = dims)
+      for (i in seq_along(tok_list)) {
+        tokens <- tok_list[[i]]
+        if (length(tokens) == 0L) next
+        # Term frequency
+        tab <- table(tokens)
+        idx <- vocab_index[names(tab)]
+        valid <- !is.na(idx)
+        if (!any(valid)) next
+        mat[i, idx[valid]] <- as.numeric(tab[valid]) * idf[idx[valid]]
+      }
+      # Normalize rows to unit length
+      norms <- sqrt(rowSums(mat^2))
+      norms[norms == 0] <- 1
+      mat / norms
+    }
+
+    new_embedder(embed_fn, dims)
   }
 
-  new_embedder(embed_fn, dims)
+  if (.trace_active()) {
+    securetrace::with_span("context.embed_tfidf", type = "custom", {
+      result <- .do_embed_tfidf()
+      .span_event("embed_tfidf.complete", list(
+        corpus_size = length(corpus)
+      ))
+      result
+    })
+  } else {
+    .do_embed_tfidf()
+  }
 }
 
 #' Embed texts using an embedder
@@ -120,5 +134,21 @@ embed_texts <- function(embedder, texts) {
   if (!is.character(texts)) {
     cli_abort("{.arg texts} must be a character vector.")
   }
-  embedder@embed_fn(texts)
+
+  .do_embed <- function() {
+    embedder@embed_fn(texts)
+  }
+
+  if (.trace_active()) {
+    securetrace::with_span("context.embed_texts", type = "custom", {
+      result <- .do_embed()
+      .span_event("embed_texts.complete", list(
+        text_count = length(texts),
+        dims = embedder@dims
+      ))
+      result
+    })
+  } else {
+    .do_embed()
+  }
 }

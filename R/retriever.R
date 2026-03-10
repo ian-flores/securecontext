@@ -56,8 +56,25 @@ retrieve <- function(ret, query, k = 5L) {
   if (!S7_inherits(ret, securecontext_retriever)) {
     cli_abort("{.arg ret} must be a {.cls securecontext_retriever}.")
   }
-  query_emb <- embed_texts(ret@embedder, query)
-  ret@store$search(query_emb, k = k)
+
+  .do_retrieve <- function() {
+    query_emb <- embed_texts(ret@embedder, query)
+    ret@store$search(query_emb, k = k)
+  }
+
+  if (.trace_active()) {
+    securetrace::with_span("context.retrieve", type = "custom", {
+      result <- .do_retrieve()
+      .span_event("retrieve.complete", list(
+        query_length = nchar(query),
+        k = k,
+        result_count = nrow(result)
+      ))
+      result
+    })
+  } else {
+    .do_retrieve()
+  }
 }
 
 #' Add documents to a retriever
@@ -85,29 +102,46 @@ add_documents <- function(ret, documents, chunk_strategy = "recursive", ...) {
     documents <- list(documents)
   }
 
-  all_chunks <- character()
-  all_ids <- character()
-  all_meta <- list()
+  .do_add_documents <- function() {
+    all_chunks <- character()
+    all_ids <- character()
+    all_meta <- list()
 
-  for (doc in documents) {
-    if (!is_document(doc)) {
-      cli_abort("Each element must be a {.cls securecontext_document}.")
+    for (doc in documents) {
+      if (!is_document(doc)) {
+        cli_abort("Each element must be a {.cls securecontext_document}.")
+      }
+      chunks <- chunk_text(doc@text, strategy = chunk_strategy, ...)
+      n <- length(chunks)
+      if (n == 0L) next
+      ids <- paste0(doc@id, "_chunk_", seq_len(n))
+      meta <- lapply(seq_len(n), function(i) {
+        c(doc@metadata, list(doc_id = doc@id, chunk_index = i, chunk_text = chunks[i]))
+      })
+      all_chunks <- c(all_chunks, chunks)
+      all_ids <- c(all_ids, ids)
+      all_meta <- c(all_meta, meta)
     }
-    chunks <- chunk_text(doc@text, strategy = chunk_strategy, ...)
-    n <- length(chunks)
-    if (n == 0L) next
-    ids <- paste0(doc@id, "_chunk_", seq_len(n))
-    meta <- lapply(seq_len(n), function(i) {
-      c(doc@metadata, list(doc_id = doc@id, chunk_index = i, chunk_text = chunks[i]))
-    })
-    all_chunks <- c(all_chunks, chunks)
-    all_ids <- c(all_ids, ids)
-    all_meta <- c(all_meta, meta)
+
+    if (length(all_chunks) > 0L) {
+      embs <- embed_texts(ret@embedder, all_chunks)
+      ret@store$add(all_ids, embs, all_meta)
+    }
+    invisible(ret)
   }
 
-  if (length(all_chunks) > 0L) {
-    embs <- embed_texts(ret@embedder, all_chunks)
-    ret@store$add(all_ids, embs, all_meta)
+  if (.trace_active()) {
+    securetrace::with_span("context.add_documents", type = "custom", {
+      result <- .do_add_documents()
+      doc_count <- if (is.list(documents)) length(documents) else 1L
+      .span_event("add_documents.complete", list(
+        document_count = doc_count,
+        chunk_strategy = chunk_strategy,
+        total_chunks = ret@store$size()
+      ))
+      result
+    })
+  } else {
+    .do_add_documents()
   }
-  invisible(ret)
 }

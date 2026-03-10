@@ -92,32 +92,48 @@ cb_build <- function(builder) {
     ))
   }
 
-  # Sort by priority descending
-  priorities <- vapply(builder@items, function(x) x$priority, double(1L))
-  ord <- order(priorities, decreasing = TRUE)
+  .do_build <- function() {
+    # Sort by priority descending
+    priorities <- vapply(builder@items, function(x) x$priority, double(1L))
+    ord <- order(priorities, decreasing = TRUE)
 
-  included <- character()
-  excluded <- character()
-  parts <- character()
-  used_tokens <- 0L
+    included <- character()
+    excluded <- character()
+    parts <- character()
+    used_tokens <- 0L
 
-  for (i in ord) {
-    item <- builder@items[[i]]
-    if (used_tokens + item$tokens <= builder@max_tokens) {
-      parts <- c(parts, item$text)
-      used_tokens <- used_tokens + item$tokens
-      included <- c(included, item$label)
-    } else {
-      excluded <- c(excluded, item$label)
+    for (i in ord) {
+      item <- builder@items[[i]]
+      if (used_tokens + item$tokens <= builder@max_tokens) {
+        parts <- c(parts, item$text)
+        used_tokens <- used_tokens + item$tokens
+        included <- c(included, item$label)
+      } else {
+        excluded <- c(excluded, item$label)
+      }
     }
+
+    list(
+      context = paste(parts, collapse = "\n\n"),
+      included = included,
+      excluded = excluded,
+      total_tokens = used_tokens
+    )
   }
 
-  list(
-    context = paste(parts, collapse = "\n\n"),
-    included = included,
-    excluded = excluded,
-    total_tokens = used_tokens
-  )
+  if (.trace_active()) {
+    securetrace::with_span("context.build", type = "custom", {
+      result <- .do_build()
+      .span_event("build.complete", list(
+        items_included = length(result$included),
+        items_excluded = length(result$excluded),
+        total_tokens = result$total_tokens
+      ))
+      result
+    })
+  } else {
+    .do_build()
+  }
 }
 
 #' Reset a context builder

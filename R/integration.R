@@ -44,24 +44,41 @@ context_for_chat <- function(ret, query, max_tokens = 4000L, k = 10L) {
   if (!S7_inherits(ret, securecontext_retriever)) {
     cli_abort("{.arg ret} must be a {.cls securecontext_retriever}.")
   }
-  results <- retrieve(ret, query, k = k)
-  cb <- context_builder(max_tokens = max_tokens)
 
-  if (nrow(results) > 0L) {
-    for (i in seq_len(nrow(results))) {
-      id <- results$id[i]
-      score <- results$score[i]
-      # Try to get chunk_text from store metadata
-      store_meta <- ret@store$.__enclos_env__$private$.metadata
-      idx <- which(ret@store$.__enclos_env__$private$.ids == id)
-      chunk_text_val <- if (length(idx) > 0L && !is.null(store_meta[[idx]]$chunk_text)) {
-        store_meta[[idx]]$chunk_text
-      } else {
-        id
+  .do_context_for_chat <- function() {
+    results <- retrieve(ret, query, k = k)
+    cb <- context_builder(max_tokens = max_tokens)
+
+    if (nrow(results) > 0L) {
+      for (i in seq_len(nrow(results))) {
+        id <- results$id[i]
+        score <- results$score[i]
+        # Try to get chunk_text from store metadata
+        store_meta <- ret@store$.__enclos_env__$private$.metadata
+        idx <- which(ret@store$.__enclos_env__$private$.ids == id)
+        chunk_text_val <- if (length(idx) > 0L && !is.null(store_meta[[idx]]$chunk_text)) {
+          store_meta[[idx]]$chunk_text
+        } else {
+          id
+        }
+        cb <- cb_add(cb, chunk_text_val, priority = score, label = id)
       }
-      cb <- cb_add(cb, chunk_text_val, priority = score, label = id)
     }
+
+    cb_build(cb)
   }
 
-  cb_build(cb)
+  if (.trace_active()) {
+    securetrace::with_span("context.context_for_chat", type = "custom", {
+      result <- .do_context_for_chat()
+      .span_event("context_for_chat.complete", list(
+        query_length = nchar(query),
+        max_tokens = max_tokens,
+        k = k
+      ))
+      result
+    })
+  } else {
+    .do_context_for_chat()
+  }
 }
