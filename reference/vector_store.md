@@ -29,6 +29,8 @@ persistence.
 
 - [`vector_store$save()`](#method-vector_store-save)
 
+- [`vector_store$print()`](#method-vector_store-print)
+
 - [`vector_store$load()`](#method-vector_store-load)
 
 - [`vector_store$clone()`](#method-vector_store-clone)
@@ -154,6 +156,22 @@ Save store to an RDS file.
 - `path`:
 
   File path.
+
+------------------------------------------------------------------------
+
+### Method [`print()`](https://rdrr.io/r/base/print.html)
+
+Print a summary of the vector store.
+
+#### Usage
+
+    vector_store$print(...)
+
+#### Arguments
+
+- `...`:
+
+  Ignored.
 
 ------------------------------------------------------------------------
 

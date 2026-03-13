@@ -63,6 +63,7 @@ Vector Store"></head><body>
 <li><p><a href="#method-vector_store-remove"><code>vector_store$remove()</code></a></p></li>
 <li><p><a href="#method-vector_store-size"><code>vector_store$size()</code></a></p></li>
 <li><p><a href="#method-vector_store-save"><code>vector_store$save()</code></a></p></li>
+<li><p><a href="#method-vector_store-print"><code>vector_store$print()</code></a></p></li>
 <li><p><a href="#method-vector_store-load"><code>vector_store$load()</code></a></p></li>
 <li><p><a href="#method-vector_store-clone"><code>vector_store$clone()</code></a></p></li>
 </ul></div><p></p><hr><a id="method-vector_store-new"></a><div class="section">
@@ -184,15 +185,31 @@ store operations are logged via <code><a href="log_store_event.html">log_store_e
 </dl><p></p></div>
 </div>
 
-</div><p></p><hr><a id="method-vector_store-load"></a><div class="section">
-<h3 id="method-load-">Method <code><a href="https://rdrr.io/r/base/load.html" class="external-link">load()</a></code><a class="anchor" aria-label="anchor" href="#method-load-"></a></h3>
-<p>Load store from an RDS file.</p><div class="section">
+</div><p></p><hr><a id="method-vector_store-print"></a><div class="section">
+<h3 id="method-print-">Method <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code><a class="anchor" aria-label="anchor" href="#method-print-"></a></h3>
+<p>Print a summary of the vector store.</p><div class="section">
 <h4 id="usage-6">Usage<a class="anchor" aria-label="anchor" href="#usage-6"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">vector_store</span><span class="op">$</span><span class="fu">load</span><span class="op">(</span><span class="va">path</span><span class="op">)</span></span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">vector_store</span><span class="op">$</span><span class="fu">print</span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
 <h4 id="arguments-5">Arguments<a class="anchor" aria-label="anchor" href="#arguments-5"></a></h4>
+<p></p><div class="arguments"><dl><dt><code>...</code></dt>
+<dd><p>Ignored.</p></dd>
+
+
+</dl><p></p></div>
+</div>
+
+</div><p></p><hr><a id="method-vector_store-load"></a><div class="section">
+<h3 id="method-load-">Method <code><a href="https://rdrr.io/r/base/load.html" class="external-link">load()</a></code><a class="anchor" aria-label="anchor" href="#method-load-"></a></h3>
+<p>Load store from an RDS file.</p><div class="section">
+<h4 id="usage-7">Usage<a class="anchor" aria-label="anchor" href="#usage-7"></a></h4>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">vector_store</span><span class="op">$</span><span class="fu">load</span><span class="op">(</span><span class="va">path</span><span class="op">)</span></span></code></pre></div><p></p></div>
+</div>
+
+<div class="section">
+<h4 id="arguments-6">Arguments<a class="anchor" aria-label="anchor" href="#arguments-6"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>path</code></dt>
 <dd><p>File path.</p></dd>
 
@@ -203,12 +220,12 @@ store operations are logged via <code><a href="log_store_event.html">log_store_e
 </div><p></p><hr><a id="method-vector_store-clone"></a><div class="section">
 <h3 id="method-clone-">Method <code>clone()</code><a class="anchor" aria-label="anchor" href="#method-clone-"></a></h3>
 <p>The objects of this class are cloneable with this method.</p><div class="section">
-<h4 id="usage-7">Usage<a class="anchor" aria-label="anchor" href="#usage-7"></a></h4>
+<h4 id="usage-8">Usage<a class="anchor" aria-label="anchor" href="#usage-8"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">vector_store</span><span class="op">$</span><span class="fu">clone</span><span class="op">(</span>deep <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="arguments-6">Arguments<a class="anchor" aria-label="anchor" href="#arguments-6"></a></h4>
+<h4 id="arguments-7">Arguments<a class="anchor" aria-label="anchor" href="#arguments-7"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>deep</code></dt>
 <dd><p>Whether to make a deep clone.</p></dd>
 

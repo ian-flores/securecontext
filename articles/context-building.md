@@ -143,7 +143,7 @@ cat("Total tokens:", result$total_tokens, "\n")
 In a multi-turn conversation, you typically rebuild the context for each
 turn – the retrieved chunks change, the conversation history grows, and
 the system prompt may be updated. Use
-[`cb_reset()`](https://ian-flores.github.io/securecontext/reference/cb_reset.md)
+[`cb_reset()`](https://ian-flores.github.io/securecontext/reference/context_reset.md)
 to clear all items and reuse the same builder without re-specifying the
 token budget.
 

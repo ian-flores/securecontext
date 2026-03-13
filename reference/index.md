@@ -24,7 +24,8 @@
 
 ## Embeddings
 
-- [`new_embedder()`](https://ian-flores.github.io/securecontext/reference/new_embedder.md)
+- [`embedder()`](https://ian-flores.github.io/securecontext/reference/embedder.md)
+  [`new_embedder()`](https://ian-flores.github.io/securecontext/reference/embedder.md)
   : Create an embedder
 - [`securecontext_embedder()`](https://ian-flores.github.io/securecontext/reference/securecontext_embedder.md)
   : S7 class for securecontext embedders
@@ -65,11 +66,14 @@
   : Create a context builder
 - [`securecontext_context_builder()`](https://ian-flores.github.io/securecontext/reference/securecontext_context_builder.md)
   : S7 class for securecontext context builders
-- [`cb_add()`](https://ian-flores.github.io/securecontext/reference/cb_add.md)
+- [`context_add()`](https://ian-flores.github.io/securecontext/reference/context_add.md)
+  [`cb_add()`](https://ian-flores.github.io/securecontext/reference/context_add.md)
   : Add content to a context builder
-- [`cb_build()`](https://ian-flores.github.io/securecontext/reference/cb_build.md)
+- [`context_build()`](https://ian-flores.github.io/securecontext/reference/context_build.md)
+  [`cb_build()`](https://ian-flores.github.io/securecontext/reference/context_build.md)
   : Build the context string
-- [`cb_reset()`](https://ian-flores.github.io/securecontext/reference/cb_reset.md)
+- [`context_reset()`](https://ian-flores.github.io/securecontext/reference/context_reset.md)
+  [`cb_reset()`](https://ian-flores.github.io/securecontext/reference/context_reset.md)
   : Reset a context builder
 
 ## Token Counting

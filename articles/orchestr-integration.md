@@ -210,7 +210,7 @@ The builder packs items in priority order until the budget is exhausted.
 Dropped items are reported in `$excluded`, so you can log what was cut.
 
 Use
-[`cb_reset()`](https://ian-flores.github.io/securecontext/reference/cb_reset.md)
+[`cb_reset()`](https://ian-flores.github.io/securecontext/reference/context_reset.md)
 between turns to reuse the same builder:
 
 ``` r

@@ -31,6 +31,8 @@ value, optional metadata, and timestamp.
 
 - [`knowledge_store$size()`](#method-knowledge_store-size)
 
+- [`knowledge_store$print()`](#method-knowledge_store-print)
+
 - [`knowledge_store$save()`](#method-knowledge_store-save)
 
 - [`knowledge_store$load()`](#method-knowledge_store-load)
@@ -182,6 +184,22 @@ Number of entries.
 #### Returns
 
 Integer.
+
+------------------------------------------------------------------------
+
+### Method [`print()`](https://rdrr.io/r/base/print.html)
+
+Print a summary of the knowledge store.
+
+#### Usage
+
+    knowledge_store$print(...)
+
+#### Arguments
+
+- `...`:
+
+  Ignored.
 
 ------------------------------------------------------------------------
 

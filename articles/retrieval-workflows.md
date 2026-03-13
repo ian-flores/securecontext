@@ -84,7 +84,7 @@ like C and Fortran.",
 
 # S7 property access with @
 doc_r@id
-#> [1] "doc_20260310163658_c6be45ee"
+#> [1] "doc_20260313182331_c6be45ee"
 doc_r@metadata
 #> $source
 #> [1] "intro"
@@ -302,9 +302,9 @@ cat("Chunks in store:", vs_ret$size(), "\n\n")
 hits <- retrieve(ret, "machine learning", k = 3)
 print(hits)
 #>                                    id     score
-#> 1 doc_20260310163658_e35844e7_chunk_4 0.3992843
-#> 2 doc_20260310163658_c6be45ee_chunk_1 0.0000000
-#> 3 doc_20260310163658_c6be45ee_chunk_2 0.0000000
+#> 1 doc_20260313182331_e35844e7_chunk_4 0.3992843
+#> 2 doc_20260313182331_c6be45ee_chunk_1 0.0000000
+#> 3 doc_20260313182331_c6be45ee_chunk_2 0.0000000
 ```
 
 The returned data frame contains chunk IDs and cosine similarity scores.
@@ -374,6 +374,11 @@ cb <- context_builder(max_tokens = 100)
 
 # Add content with different priorities (higher = included first)
 cb <- cb_add(cb, "You are a helpful assistant.", priority = 10, label = "system")
+#> Warning: `cb_add()` was deprecated in securecontext 0.2.0.
+#> ℹ Please use `context_add()` instead.
+#> This warning is displayed once per session.
+#> Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+#> generated.
 cb <- cb_add(cb,
   "R is great for statistics and data visualization.",
   priority = 5, label = "retrieved_chunk_1"
@@ -388,6 +393,11 @@ cb <- cb_add(cb,
 )
 
 result <- cb_build(cb)
+#> Warning: `cb_build()` was deprecated in securecontext 0.2.0.
+#> ℹ Please use `context_build()` instead.
+#> This warning is displayed once per session.
+#> Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+#> generated.
 
 cat("Assembled context:\n")
 #> Assembled context:
@@ -412,12 +422,17 @@ token budget is exhausted. Items that do not fit are reported in
 `$excluded`, making it easy to log what was dropped.
 
 Use
-[`cb_reset()`](https://ian-flores.github.io/securecontext/reference/cb_reset.md)
+[`cb_reset()`](https://ian-flores.github.io/securecontext/reference/context_reset.md)
 to clear all items and reuse the same builder with a new turn of
 conversation:
 
 ``` r
 cb2 <- cb_reset(cb)
+#> Warning: `cb_reset()` was deprecated in securecontext 0.2.0.
+#> ℹ Please use `context_reset()` instead.
+#> This warning is displayed once per session.
+#> Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+#> generated.
 cb2 <- cb_add(cb2, "New system prompt.", priority = 10, label = "system_v2")
 result2 <- cb_build(cb2)
 cat("After reset -- included:", paste(result2$included, collapse = ", "), "\n")
@@ -475,8 +490,8 @@ The securecontext retrieval pipeline follows these steps:
     – semantic search
 7.  `knowledge_store$new()` – persistent key-value memory
 8.  [`context_builder()`](https://ian-flores.github.io/securecontext/reference/context_builder.md) +
-    [`cb_add()`](https://ian-flores.github.io/securecontext/reference/cb_add.md) +
-    [`cb_build()`](https://ian-flores.github.io/securecontext/reference/cb_build.md)
+    [`cb_add()`](https://ian-flores.github.io/securecontext/reference/context_add.md) +
+    [`cb_build()`](https://ian-flores.github.io/securecontext/reference/context_build.md)
     – token-aware assembly
 9.  [`context_for_chat()`](https://ian-flores.github.io/securecontext/reference/context_for_chat.md)
     – one-call retrieve-and-build
