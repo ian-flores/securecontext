@@ -26,14 +26,22 @@ securecontext_embedder <- new_class("securecontext_embedder", properties = list(
 #' @examples
 #' # Create a simple random embedder
 #' random_embed <- function(texts) matrix(runif(length(texts) * 3), ncol = 3)
-#' emb <- new_embedder(random_embed, dims = 3L)
+#' emb <- embedder(random_embed, dims = 3L)
 #' emb@dims
-new_embedder <- function(embed_fn, dims) {
+embedder <- function(embed_fn, dims) {
   if (!is.function(embed_fn)) {
     cli_abort("{.arg embed_fn} must be a function.")
   }
   dims <- as.integer(dims)
   securecontext_embedder(embed_fn = embed_fn, dims = dims)
+}
+
+#' @rdname embedder
+#' @param ... Arguments passed to [embedder()].
+#' @export
+new_embedder <- function(...) {
+  lifecycle::deprecate_warn("0.2.0", "new_embedder()", "embedder()")
+  embedder(...)
 }
 
 #' Create a TF-IDF embedder
@@ -101,7 +109,7 @@ embed_tfidf <- function(corpus) {
       mat / norms
     }
 
-    new_embedder(embed_fn, dims)
+    embedder(embed_fn, dims)
   }
 
   if (.trace_active()) {
@@ -151,4 +159,18 @@ embed_texts <- function(embedder, texts) {
   } else {
     .do_embed()
   }
+}
+
+method(format, securecontext_embedder) <- function(x, ...) {
+  embed_type <- if (is.function(x@embed_fn)) "custom" else "unknown"
+  paste0(
+    "<securecontext_embedder>\n",
+    "  type: ", embed_type, "\n",
+    "  dims: ", x@dims
+  )
+}
+
+method(print, securecontext_embedder) <- function(x, ...) {
+  cat(format(x, ...), "\n")
+  invisible(x)
 }

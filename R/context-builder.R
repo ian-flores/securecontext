@@ -22,9 +22,9 @@ securecontext_context_builder <- new_class("securecontext_context_builder", prop
 #' @export
 #' @examples
 #' cb <- context_builder(max_tokens = 100)
-#' cb <- cb_add(cb, "Important info", priority = 10)
-#' cb <- cb_add(cb, "Less important", priority = 1)
-#' result <- cb_build(cb)
+#' cb <- context_add(cb, "Important info", priority = 10)
+#' cb <- context_add(cb, "Less important", priority = 1)
+#' result <- context_build(cb)
 context_builder <- function(max_tokens = 4000L) {
   securecontext_context_builder(
     max_tokens = as.integer(max_tokens),
@@ -42,9 +42,9 @@ context_builder <- function(max_tokens = 4000L) {
 #' @export
 #' @examples
 #' cb <- context_builder(max_tokens = 100)
-#' cb <- cb_add(cb, "High priority text", priority = 10, label = "important")
-#' cb <- cb_add(cb, "Low priority text", priority = 1, label = "filler")
-cb_add <- function(builder, text, priority = 1, label = NULL) {
+#' cb <- context_add(cb, "High priority text", priority = 10, label = "important")
+#' cb <- context_add(cb, "Low priority text", priority = 1, label = "filler")
+context_add <- function(builder, text, priority = 1, label = NULL) {
   if (!S7_inherits(builder, securecontext_context_builder)) {
     cli_abort("{.arg builder} must be a {.cls securecontext_context_builder}.")
   }
@@ -64,6 +64,14 @@ cb_add <- function(builder, text, priority = 1, label = NULL) {
   )
 }
 
+#' @rdname context_add
+#' @param ... Arguments passed to [context_add()].
+#' @export
+cb_add <- function(...) {
+  lifecycle::deprecate_warn("0.2.0", "cb_add()", "context_add()")
+  context_add(...)
+}
+
 #' Build the context string
 #'
 #' Assembles context by including highest-priority items first until the token
@@ -76,10 +84,10 @@ cb_add <- function(builder, text, priority = 1, label = NULL) {
 #' @export
 #' @examples
 #' cb <- context_builder(max_tokens = 100)
-#' cb <- cb_add(cb, "Important info", priority = 10)
-#' result <- cb_build(cb)
+#' cb <- context_add(cb, "Important info", priority = 10)
+#' result <- context_build(cb)
 #' result$context
-cb_build <- function(builder) {
+context_build <- function(builder) {
   if (!S7_inherits(builder, securecontext_context_builder)) {
     cli_abort("{.arg builder} must be a {.cls securecontext_context_builder}.")
   }
@@ -136,6 +144,14 @@ cb_build <- function(builder) {
   }
 }
 
+#' @rdname context_build
+#' @param ... Arguments passed to [context_build()].
+#' @export
+cb_build <- function(...) {
+  lifecycle::deprecate_warn("0.2.0", "cb_build()", "context_build()")
+  context_build(...)
+}
+
 #' Reset a context builder
 #'
 #' Removes all added content.
@@ -145,10 +161,10 @@ cb_build <- function(builder) {
 #' @export
 #' @examples
 #' cb <- context_builder(max_tokens = 100)
-#' cb <- cb_add(cb, "some text")
-#' cb <- cb_reset(cb)
+#' cb <- context_add(cb, "some text")
+#' cb <- context_reset(cb)
 #' length(cb@items)
-cb_reset <- function(builder) {
+context_reset <- function(builder) {
   if (!S7_inherits(builder, securecontext_context_builder)) {
     cli_abort("{.arg builder} must be a {.cls securecontext_context_builder}.")
   }
@@ -156,4 +172,26 @@ cb_reset <- function(builder) {
     max_tokens = builder@max_tokens,
     items = list()
   )
+}
+
+#' @rdname context_reset
+#' @param ... Arguments passed to [context_reset()].
+#' @export
+cb_reset <- function(...) {
+  lifecycle::deprecate_warn("0.2.0", "cb_reset()", "context_reset()")
+  context_reset(...)
+}
+
+method(format, securecontext_context_builder) <- function(x, ...) {
+  n_items <- length(x@items)
+  paste0(
+    "<securecontext_context_builder>\n",
+    "  max_tokens: ", x@max_tokens, "\n",
+    "  items: ", n_items
+  )
+}
+
+method(print, securecontext_context_builder) <- function(x, ...) {
+  cat(format(x, ...), "\n")
+  invisible(x)
 }

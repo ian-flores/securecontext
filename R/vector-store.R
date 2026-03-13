@@ -172,6 +172,18 @@ vector_store <- R6::R6Class(
       invisible(self)
     },
 
+    #' @description Print a summary of the vector store.
+    #' @param ... Ignored.
+    print = function(...) {
+      cli::cli_text("<{class(self)[[1]]}>")
+      cli::cli_ul(c(
+        "dims: {private$.dims}",
+        "vectors: {self$size()}",
+        "encrypted: {!is.null(private$.encryption_key)}"
+      ))
+      invisible(self)
+    },
+
     #' @description Load store from an RDS file.
     #' @param path File path.
     load = function(path) {

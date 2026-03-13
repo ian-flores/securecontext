@@ -17,7 +17,7 @@ Token-aware context assembly with priority-based inclusion.
 }
 \examples{
 cb <- context_builder(max_tokens = 100)
-cb <- cb_add(cb, "Important info", priority = 10)
-cb <- cb_add(cb, "Less important", priority = 1)
-result <- cb_build(cb)
+cb <- context_add(cb, "Important info", priority = 10)
+cb <- context_add(cb, "Less important", priority = 1)
+result <- context_build(cb)
 }

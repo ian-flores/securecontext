@@ -113,6 +113,19 @@ knowledge_store <- R6::R6Class(
       length(private$.data)
     },
 
+    #' @description Print a summary of the knowledge store.
+    #' @param ... Ignored.
+    print = function(...) {
+      backend <- if (!is.null(private$.path)) "JSONL" else "in-memory"
+      cli::cli_text("<{class(self)[[1]]}>")
+      cli::cli_ul(c(
+        "keys: {self$size()}",
+        "backend: {backend}",
+        "encrypted: {!is.null(private$.encryption_key)}"
+      ))
+      invisible(self)
+    },
+
     #' @description Save to JSONL file.
     save = function() {
       if (is.null(private$.path)) {

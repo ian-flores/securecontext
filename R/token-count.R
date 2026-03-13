@@ -11,7 +11,7 @@
 #' @examples
 #' count_tokens("Hello world, this is a test.")
 count_tokens <- function(text, method = c("words", "chars")) {
-  method <- match.arg(method)
+  method <- rlang::arg_match(method)
   if (!is.character(text)) {
     cli_abort("{.arg text} must be a character vector.")
   }

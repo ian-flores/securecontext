@@ -30,6 +30,7 @@ vs$size()
 \item \href{#method-vector_store-remove}{\code{vector_store$remove()}}
 \item \href{#method-vector_store-size}{\code{vector_store$size()}}
 \item \href{#method-vector_store-save}{\code{vector_store$save()}}
+\item \href{#method-vector_store-print}{\code{vector_store$print()}}
 \item \href{#method-vector_store-load}{\code{vector_store$load()}}
 \item \href{#method-vector_store-clone}{\code{vector_store$clone()}}
 }
@@ -144,6 +145,23 @@ Save store to an RDS file.
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{path}}{File path.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-vector_store-print"></a>}}
+\if{latex}{\out{\hypertarget{method-vector_store-print}{}}}
+\subsection{Method \code{print()}}{
+Print a summary of the vector store.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{vector_store$print(...)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{Ignored.}
 }
 \if{html}{\out{</div>}}
 }

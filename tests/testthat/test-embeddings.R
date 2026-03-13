@@ -20,8 +20,8 @@ test_that("TF-IDF embeddings are normalized", {
   expect_true(all(norms < 1.01))
 })
 
-test_that("new_embedder() validates inputs", {
-  expect_error(new_embedder("not_a_fn", 10), "must be a function")
+test_that("embedder() validates inputs", {
+  expect_error(embedder("not_a_fn", 10), "must be a function")
 })
 
 test_that("embed_texts() validates embedder", {
@@ -30,4 +30,11 @@ test_that("embed_texts() validates embedder", {
 
 test_that("embed_tfidf() rejects empty corpus", {
   expect_error(embed_tfidf(character(0)), "non-empty character vector")
+})
+
+test_that("deprecated new_embedder() still works", {
+  random_embed <- function(texts) matrix(runif(length(texts) * 3), ncol = 3)
+  lifecycle::expect_deprecated(emb <- new_embedder(random_embed, dims = 3L))
+  expect_true(S7::S7_inherits(emb, securecontext_embedder))
+  expect_equal(emb@dims, 3L)
 })

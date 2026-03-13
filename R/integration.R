@@ -61,11 +61,11 @@ context_for_chat <- function(ret, query, max_tokens = 4000L, k = 10L) {
         } else {
           id
         }
-        cb <- cb_add(cb, chunk_text_val, priority = score, label = id)
+        cb <- context_add(cb, chunk_text_val, priority = score, label = id)
       }
     }
 
-    cb_build(cb)
+    context_build(cb)
   }
 
   if (.trace_active()) {

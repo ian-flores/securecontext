@@ -32,6 +32,7 @@ ks$size()
 \item \href{#method-knowledge_store-search}{\code{knowledge_store$search()}}
 \item \href{#method-knowledge_store-list}{\code{knowledge_store$list()}}
 \item \href{#method-knowledge_store-size}{\code{knowledge_store$size()}}
+\item \href{#method-knowledge_store-print}{\code{knowledge_store$print()}}
 \item \href{#method-knowledge_store-save}{\code{knowledge_store$save()}}
 \item \href{#method-knowledge_store-load}{\code{knowledge_store$load()}}
 \item \href{#method-knowledge_store-clone}{\code{knowledge_store$clone()}}
@@ -173,6 +174,23 @@ Number of entries.
 
 \subsection{Returns}{
 Integer.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-knowledge_store-print"></a>}}
+\if{latex}{\out{\hypertarget{method-knowledge_store-print}{}}}
+\subsection{Method \code{print()}}{
+Print a summary of the knowledge store.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{knowledge_store$print(...)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{Ignored.}
+}
+\if{html}{\out{</div>}}
 }
 }
 \if{html}{\out{<hr>}}

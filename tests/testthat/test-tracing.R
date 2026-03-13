@@ -57,13 +57,13 @@ test_that("retrieve emits span when trace active", {
   })
 })
 
-test_that("cb_build emits span when trace active", {
+test_that("context_build emits span when trace active", {
   skip_if_not_installed("securetrace")
 
-  result <- securetrace::with_trace("test-cb-build", {
+  result <- securetrace::with_trace("test-context-build", {
     cb <- context_builder(max_tokens = 100)
-    cb <- cb_add(cb, "Important info", priority = 10)
-    cb_build(cb)
+    cb <- context_add(cb, "Important info", priority = 10)
+    context_build(cb)
   })
 
   expect_true(is.list(result))
@@ -96,10 +96,10 @@ test_that("embed_tfidf works without trace", {
   expect_true(S7_inherits(result, securecontext_embedder))
 })
 
-test_that("cb_build works without trace", {
+test_that("context_build works without trace", {
   cb <- context_builder(max_tokens = 100)
-  cb <- cb_add(cb, "Some text", priority = 5)
-  result <- cb_build(cb)
+  cb <- context_add(cb, "Some text", priority = 5)
+  result <- context_build(cb)
   expect_true(is.list(result))
   expect_equal(result$included, "item_1")
 })

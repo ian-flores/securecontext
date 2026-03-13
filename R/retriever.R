@@ -145,3 +145,18 @@ add_documents <- function(ret, documents, chunk_strategy = "recursive", ...) {
     .do_add_documents()
   }
 }
+
+method(format, securecontext_retriever) <- function(x, ...) {
+  store_size <- if (inherits(x@store, "vector_store")) x@store$size() else "?"
+  emb_dims <- if (S7_inherits(x@embedder, securecontext_embedder)) x@embedder@dims else "?"
+  paste0(
+    "<securecontext_retriever>\n",
+    "  store: vector_store (", store_size, " vectors)\n",
+    "  embedder dims: ", emb_dims
+  )
+}
+
+method(print, securecontext_retriever) <- function(x, ...) {
+  cat(format(x, ...), "\n")
+  invisible(x)
+}

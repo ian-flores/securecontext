@@ -11,7 +11,7 @@
 #' @examples
 #' chunks <- chunk_text("Hello world. How are you?", strategy = "sentence")
 chunk_text <- function(text, strategy = c("fixed", "sentence", "paragraph", "recursive"), ...) {
-  strategy <- match.arg(strategy)
+  strategy <- rlang::arg_match(strategy)
   if (!is.character(text) || length(text) != 1L) {
     cli_abort("{.arg text} must be a single character string.")
   }

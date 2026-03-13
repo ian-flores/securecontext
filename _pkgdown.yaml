@@ -28,7 +28,7 @@ reference:
 
   - title: Embeddings
     contents:
-      - new_embedder
+      - embedder
       - securecontext_embedder
       - embed_tfidf
       - embed_texts
@@ -56,9 +56,9 @@ reference:
     contents:
       - context_builder
       - securecontext_context_builder
-      - cb_add
-      - cb_build
-      - cb_reset
+      - context_add
+      - context_build
+      - context_reset
 
   - title: Token Counting
     contents:
