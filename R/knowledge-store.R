@@ -65,6 +65,14 @@ knowledge_store <- R6::R6Class(
       if (is.null(entry)) default else entry$value
     },
 
+    #' @description Get the metadata list attached to a key.
+    #' @param key Character key.
+    #' @return A named list of metadata, or `NULL` if the key is absent.
+    get_metadata = function(key) {
+      entry <- private$.data[[key]]
+      if (is.null(entry)) NULL else entry$metadata
+    },
+
     #' @description Delete a key.
     #' @param key Character key.
     delete = function(key) {

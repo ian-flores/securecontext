@@ -28,6 +28,7 @@ ks$size()
 \item \href{#method-knowledge_store-new}{\code{knowledge_store$new()}}
 \item \href{#method-knowledge_store-set}{\code{knowledge_store$set()}}
 \item \href{#method-knowledge_store-get}{\code{knowledge_store$get()}}
+\item \href{#method-knowledge_store-get_metadata}{\code{knowledge_store$get_metadata()}}
 \item \href{#method-knowledge_store-delete}{\code{knowledge_store$delete()}}
 \item \href{#method-knowledge_store-search}{\code{knowledge_store$search()}}
 \item \href{#method-knowledge_store-list}{\code{knowledge_store$list()}}
@@ -104,6 +105,26 @@ Get a value by key.
 }
 \subsection{Returns}{
 The stored value, or \code{default}.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-knowledge_store-get_metadata"></a>}}
+\if{latex}{\out{\hypertarget{method-knowledge_store-get_metadata}{}}}
+\subsection{Method \code{get_metadata()}}{
+Get the metadata list attached to a key.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{knowledge_store$get_metadata(key)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{key}}{Character key.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A named list of metadata, or \code{NULL} if the key is absent.
 }
 }
 \if{html}{\out{<hr>}}

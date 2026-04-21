@@ -29,6 +29,8 @@ vs$size()
 \item \href{#method-vector_store-search}{\code{vector_store$search()}}
 \item \href{#method-vector_store-remove}{\code{vector_store$remove()}}
 \item \href{#method-vector_store-size}{\code{vector_store$size()}}
+\item \href{#method-vector_store-metadata}{\code{vector_store$metadata()}}
+\item \href{#method-vector_store-ids}{\code{vector_store$ids()}}
 \item \href{#method-vector_store-save}{\code{vector_store$save()}}
 \item \href{#method-vector_store-print}{\code{vector_store$print()}}
 \item \href{#method-vector_store-load}{\code{vector_store$load()}}
@@ -130,6 +132,41 @@ Number of stored vectors.
 
 \subsection{Returns}{
 Integer.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-vector_store-metadata"></a>}}
+\if{latex}{\out{\hypertarget{method-vector_store-metadata}{}}}
+\subsection{Method \code{metadata()}}{
+Get the metadata list for a stored id, or all metadata.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{vector_store$metadata(id = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{id}}{Optional character scalar. If supplied, returns the
+metadata list for that id (or \code{NULL} if absent). If omitted,
+returns the full list of metadata entries in insertion order.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A list (single entry) or a list of lists.
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-vector_store-ids"></a>}}
+\if{latex}{\out{\hypertarget{method-vector_store-ids}{}}}
+\subsection{Method \code{ids()}}{
+Get the ids currently in the store, in insertion order.
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{vector_store$ids()}\if{html}{\out{</div>}}
+}
+
+\subsection{Returns}{
+Character vector.
 }
 }
 \if{html}{\out{<hr>}}

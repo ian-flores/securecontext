@@ -53,11 +53,9 @@ context_for_chat <- function(ret, query, max_tokens = 4000L, k = 10L) {
       for (i in seq_len(nrow(results))) {
         id <- results$id[i]
         score <- results$score[i]
-        # Try to get chunk_text from store metadata
-        store_meta <- ret@store$.__enclos_env__$private$.metadata
-        idx <- which(ret@store$.__enclos_env__$private$.ids == id)
-        chunk_text_val <- if (length(idx) > 0L && !is.null(store_meta[[idx]]$chunk_text)) {
-          store_meta[[idx]]$chunk_text
+        meta <- ret@store$metadata(id)
+        chunk_text_val <- if (!is.null(meta) && !is.null(meta$chunk_text)) {
+          meta$chunk_text
         } else {
           id
         }

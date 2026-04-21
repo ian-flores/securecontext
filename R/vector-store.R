@@ -150,6 +150,27 @@ vector_store <- R6::R6Class(
       length(private$.ids)
     },
 
+    #' @description Get the metadata list for a stored id, or all metadata.
+    #' @param id Optional character scalar. If supplied, returns the
+    #'   metadata list for that id (or `NULL` if absent). If omitted,
+    #'   returns the full list of metadata entries in insertion order.
+    #' @return A list (single entry) or a list of lists.
+    metadata = function(id = NULL) {
+      if (is.null(id)) return(private$.metadata)
+      if (!is.character(id) || length(id) != 1L) {
+        cli_abort("{.arg id} must be a single character string.")
+      }
+      idx <- which(private$.ids == id)
+      if (length(idx) == 0L) return(NULL)
+      private$.metadata[[idx[[1L]]]]
+    },
+
+    #' @description Get the ids currently in the store, in insertion order.
+    #' @return Character vector.
+    ids = function() {
+      private$.ids
+    },
+
     #' @description Save store to an RDS file.
     #' @param path File path.
     save = function(path) {
