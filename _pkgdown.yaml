@@ -32,6 +32,8 @@ reference:
       - securecontext_embedder
       - embed_tfidf
       - embed_texts
+      - embed_custom
+      - embed_openai
 
   - title: Vector Store
     contents:
