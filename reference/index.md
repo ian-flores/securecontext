@@ -33,6 +33,10 @@
   : Create a TF-IDF embedder
 - [`embed_texts()`](https://ian-flores.github.io/securecontext/reference/embed_texts.md)
   : Embed texts using an embedder
+- [`embed_custom()`](https://ian-flores.github.io/securecontext/reference/embed_custom.md)
+  : Wrap an arbitrary embedding function as a securecontext embedder
+- [`embed_openai()`](https://ian-flores.github.io/securecontext/reference/embed_openai.md)
+  : OpenAI embeddings via the REST API
 
 ## Vector Store
 

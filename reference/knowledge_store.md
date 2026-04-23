@@ -23,6 +23,8 @@ value, optional metadata, and timestamp.
 
 - [`knowledge_store$get()`](#method-knowledge_store-get)
 
+- [`knowledge_store$get_metadata()`](#method-knowledge_store-get_metadata)
+
 - [`knowledge_store$delete()`](#method-knowledge_store-delete)
 
 - [`knowledge_store$search()`](#method-knowledge_store-search)
@@ -114,6 +116,26 @@ Get a value by key.
 #### Returns
 
 The stored value, or `default`.
+
+------------------------------------------------------------------------
+
+### Method `get_metadata()`
+
+Get the metadata list attached to a key.
+
+#### Usage
+
+    knowledge_store$get_metadata(key)
+
+#### Arguments
+
+- `key`:
+
+  Character key.
+
+#### Returns
+
+A named list of metadata, or `NULL` if the key is absent.
 
 ------------------------------------------------------------------------
 

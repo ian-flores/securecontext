@@ -27,6 +27,10 @@ persistence.
 
 - [`vector_store$size()`](#method-vector_store-size)
 
+- [`vector_store$metadata()`](#method-vector_store-metadata)
+
+- [`vector_store$ids()`](#method-vector_store-ids)
+
 - [`vector_store$save()`](#method-vector_store-save)
 
 - [`vector_store$print()`](#method-vector_store-print)
@@ -140,6 +144,42 @@ Number of stored vectors.
 #### Returns
 
 Integer.
+
+------------------------------------------------------------------------
+
+### Method `metadata()`
+
+Get the metadata list for a stored id, or all metadata.
+
+#### Usage
+
+    vector_store$metadata(id = NULL)
+
+#### Arguments
+
+- `id`:
+
+  Optional character scalar. If supplied, returns the metadata list for
+  that id (or `NULL` if absent). If omitted, returns the full list of
+  metadata entries in insertion order.
+
+#### Returns
+
+A list (single entry) or a list of lists.
+
+------------------------------------------------------------------------
+
+### Method `ids()`
+
+Get the ids currently in the store, in insertion order.
+
+#### Usage
+
+    vector_store$ids()
+
+#### Returns
+
+Character vector.
 
 ------------------------------------------------------------------------
 

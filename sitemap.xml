@@ -26,6 +26,8 @@
 <url><loc>https://ian-flores.github.io/securecontext/reference/count_tokens.html</loc></url>
 <url><loc>https://ian-flores.github.io/securecontext/reference/decrypt_raw.html</loc></url>
 <url><loc>https://ian-flores.github.io/securecontext/reference/document.html</loc></url>
+<url><loc>https://ian-flores.github.io/securecontext/reference/embed_custom.html</loc></url>
+<url><loc>https://ian-flores.github.io/securecontext/reference/embed_openai.html</loc></url>
 <url><loc>https://ian-flores.github.io/securecontext/reference/embed_texts.html</loc></url>
 <url><loc>https://ian-flores.github.io/securecontext/reference/embed_tfidf.html</loc></url>
 <url><loc>https://ian-flores.github.io/securecontext/reference/embedder.html</loc></url>

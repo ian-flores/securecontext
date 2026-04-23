@@ -9,7 +9,7 @@ Knowledge Store"></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">securecontext</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,6 +61,7 @@ optional metadata, and timestamp.</p>
 <ul><li><p><a href="#method-knowledge_store-new"><code>knowledge_store$new()</code></a></p></li>
 <li><p><a href="#method-knowledge_store-set"><code>knowledge_store$set()</code></a></p></li>
 <li><p><a href="#method-knowledge_store-get"><code>knowledge_store$get()</code></a></p></li>
+<li><p><a href="#method-knowledge_store-get_metadata"><code>knowledge_store$get_metadata()</code></a></p></li>
 <li><p><a href="#method-knowledge_store-delete"><code>knowledge_store$delete()</code></a></p></li>
 <li><p><a href="#method-knowledge_store-search"><code>knowledge_store$search()</code></a></p></li>
 <li><p><a href="#method-knowledge_store-list"><code>knowledge_store$list()</code></a></p></li>
@@ -145,11 +146,11 @@ store operations are logged via <code><a href="log_store_event.html">log_store_e
 <p>The stored value, or <code>default</code>.</p>
 </div>
 
-</div><p></p><hr><a id="method-knowledge_store-delete"></a><div class="section">
-<h3 id="method-delete-">Method <code>delete()</code><a class="anchor" aria-label="anchor" href="#method-delete-"></a></h3>
-<p>Delete a key.</p><div class="section">
+</div><p></p><hr><a id="method-knowledge_store-get_metadata"></a><div class="section">
+<h3 id="method-get-metadata-">Method <code>get_metadata()</code><a class="anchor" aria-label="anchor" href="#method-get-metadata-"></a></h3>
+<p>Get the metadata list attached to a key.</p><div class="section">
 <h4 id="usage-3">Usage<a class="anchor" aria-label="anchor" href="#usage-3"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">knowledge_store</span><span class="op">$</span><span class="fu">delete</span><span class="op">(</span><span class="va">key</span><span class="op">)</span></span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">knowledge_store</span><span class="op">$</span><span class="fu">get_metadata</span><span class="op">(</span><span class="va">key</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
@@ -160,16 +161,36 @@ store operations are logged via <code><a href="log_store_event.html">log_store_e
 
 </dl><p></p></div>
 </div>
+<div class="section">
+<h4 id="returns-1">Returns<a class="anchor" aria-label="anchor" href="#returns-1"></a></h4>
+<p>A named list of metadata, or <code>NULL</code> if the key is absent.</p>
+</div>
 
-</div><p></p><hr><a id="method-knowledge_store-search"></a><div class="section">
-<h3 id="method-search-">Method <code><a href="https://rdrr.io/r/base/search.html" class="external-link">search()</a></code><a class="anchor" aria-label="anchor" href="#method-search-"></a></h3>
-<p>Search keys by regex pattern.</p><div class="section">
+</div><p></p><hr><a id="method-knowledge_store-delete"></a><div class="section">
+<h3 id="method-delete-">Method <code>delete()</code><a class="anchor" aria-label="anchor" href="#method-delete-"></a></h3>
+<p>Delete a key.</p><div class="section">
 <h4 id="usage-4">Usage<a class="anchor" aria-label="anchor" href="#usage-4"></a></h4>
-<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">knowledge_store</span><span class="op">$</span><span class="fu">search</span><span class="op">(</span><span class="va">pattern</span><span class="op">)</span></span></code></pre></div><p></p></div>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">knowledge_store</span><span class="op">$</span><span class="fu">delete</span><span class="op">(</span><span class="va">key</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
 <h4 id="arguments-4">Arguments<a class="anchor" aria-label="anchor" href="#arguments-4"></a></h4>
+<p></p><div class="arguments"><dl><dt><code>key</code></dt>
+<dd><p>Character key.</p></dd>
+
+
+</dl><p></p></div>
+</div>
+
+</div><p></p><hr><a id="method-knowledge_store-search"></a><div class="section">
+<h3 id="method-search-">Method <code><a href="https://rdrr.io/r/base/search.html" class="external-link">search()</a></code><a class="anchor" aria-label="anchor" href="#method-search-"></a></h3>
+<p>Search keys by regex pattern.</p><div class="section">
+<h4 id="usage-5">Usage<a class="anchor" aria-label="anchor" href="#usage-5"></a></h4>
+<p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">knowledge_store</span><span class="op">$</span><span class="fu">search</span><span class="op">(</span><span class="va">pattern</span><span class="op">)</span></span></code></pre></div><p></p></div>
+</div>
+
+<div class="section">
+<h4 id="arguments-5">Arguments<a class="anchor" aria-label="anchor" href="#arguments-5"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>pattern</code></dt>
 <dd><p>Regular expression.</p></dd>
 
@@ -177,19 +198,19 @@ store operations are logged via <code><a href="log_store_event.html">log_store_e
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-1">Returns<a class="anchor" aria-label="anchor" href="#returns-1"></a></h4>
+<h4 id="returns-2">Returns<a class="anchor" aria-label="anchor" href="#returns-2"></a></h4>
 <p>Character vector of matching keys.</p>
 </div>
 
 </div><p></p><hr><a id="method-knowledge_store-list"></a><div class="section">
 <h3 id="method-list-">Method <code><a href="https://rdrr.io/r/base/list.html" class="external-link">list()</a></code><a class="anchor" aria-label="anchor" href="#method-list-"></a></h3>
 <p>List all keys.</p><div class="section">
-<h4 id="usage-5">Usage<a class="anchor" aria-label="anchor" href="#usage-5"></a></h4>
+<h4 id="usage-6">Usage<a class="anchor" aria-label="anchor" href="#usage-6"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">knowledge_store</span><span class="op">$</span><span class="fu">list</span><span class="op">(</span>n <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="arguments-5">Arguments<a class="anchor" aria-label="anchor" href="#arguments-5"></a></h4>
+<h4 id="arguments-6">Arguments<a class="anchor" aria-label="anchor" href="#arguments-6"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>n</code></dt>
 <dd><p>Optional maximum number to return.</p></dd>
 
@@ -197,31 +218,31 @@ store operations are logged via <code><a href="log_store_event.html">log_store_e
 </dl><p></p></div>
 </div>
 <div class="section">
-<h4 id="returns-2">Returns<a class="anchor" aria-label="anchor" href="#returns-2"></a></h4>
+<h4 id="returns-3">Returns<a class="anchor" aria-label="anchor" href="#returns-3"></a></h4>
 <p>Character vector of keys.</p>
 </div>
 
 </div><p></p><hr><a id="method-knowledge_store-size"></a><div class="section">
 <h3 id="method-size-">Method <code>size()</code><a class="anchor" aria-label="anchor" href="#method-size-"></a></h3>
 <p>Number of entries.</p><div class="section">
-<h4 id="usage-6">Usage<a class="anchor" aria-label="anchor" href="#usage-6"></a></h4>
+<h4 id="usage-7">Usage<a class="anchor" aria-label="anchor" href="#usage-7"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">knowledge_store</span><span class="op">$</span><span class="fu">size</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="returns-3">Returns<a class="anchor" aria-label="anchor" href="#returns-3"></a></h4>
+<h4 id="returns-4">Returns<a class="anchor" aria-label="anchor" href="#returns-4"></a></h4>
 <p>Integer.</p>
 </div>
 
 </div><p></p><hr><a id="method-knowledge_store-print"></a><div class="section">
 <h3 id="method-print-">Method <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code><a class="anchor" aria-label="anchor" href="#method-print-"></a></h3>
 <p>Print a summary of the knowledge store.</p><div class="section">
-<h4 id="usage-7">Usage<a class="anchor" aria-label="anchor" href="#usage-7"></a></h4>
+<h4 id="usage-8">Usage<a class="anchor" aria-label="anchor" href="#usage-8"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">knowledge_store</span><span class="op">$</span><span class="fu">print</span><span class="op">(</span><span class="va">...</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="arguments-6">Arguments<a class="anchor" aria-label="anchor" href="#arguments-6"></a></h4>
+<h4 id="arguments-7">Arguments<a class="anchor" aria-label="anchor" href="#arguments-7"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>...</code></dt>
 <dd><p>Ignored.</p></dd>
 
@@ -232,7 +253,7 @@ store operations are logged via <code><a href="log_store_event.html">log_store_e
 </div><p></p><hr><a id="method-knowledge_store-save"></a><div class="section">
 <h3 id="method-save-">Method <code><a href="https://rdrr.io/r/base/save.html" class="external-link">save()</a></code><a class="anchor" aria-label="anchor" href="#method-save-"></a></h3>
 <p>Save to JSONL file.</p><div class="section">
-<h4 id="usage-8">Usage<a class="anchor" aria-label="anchor" href="#usage-8"></a></h4>
+<h4 id="usage-9">Usage<a class="anchor" aria-label="anchor" href="#usage-9"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">knowledge_store</span><span class="op">$</span><span class="fu">save</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
@@ -240,7 +261,7 @@ store operations are logged via <code><a href="log_store_event.html">log_store_e
 </div><p></p><hr><a id="method-knowledge_store-load"></a><div class="section">
 <h3 id="method-load-">Method <code><a href="https://rdrr.io/r/base/load.html" class="external-link">load()</a></code><a class="anchor" aria-label="anchor" href="#method-load-"></a></h3>
 <p>Load from JSONL file.</p><div class="section">
-<h4 id="usage-9">Usage<a class="anchor" aria-label="anchor" href="#usage-9"></a></h4>
+<h4 id="usage-10">Usage<a class="anchor" aria-label="anchor" href="#usage-10"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">knowledge_store</span><span class="op">$</span><span class="fu">load</span><span class="op">(</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
@@ -248,12 +269,12 @@ store operations are logged via <code><a href="log_store_event.html">log_store_e
 </div><p></p><hr><a id="method-knowledge_store-clone"></a><div class="section">
 <h3 id="method-clone-">Method <code>clone()</code><a class="anchor" aria-label="anchor" href="#method-clone-"></a></h3>
 <p>The objects of this class are cloneable with this method.</p><div class="section">
-<h4 id="usage-10">Usage<a class="anchor" aria-label="anchor" href="#usage-10"></a></h4>
+<h4 id="usage-11">Usage<a class="anchor" aria-label="anchor" href="#usage-11"></a></h4>
 <p></p><div class="r"><div class="sourceCode"><pre><code><span><span class="va">knowledge_store</span><span class="op">$</span><span class="fu">clone</span><span class="op">(</span>deep <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div><p></p></div>
 </div>
 
 <div class="section">
-<h4 id="arguments-7">Arguments<a class="anchor" aria-label="anchor" href="#arguments-7"></a></h4>
+<h4 id="arguments-8">Arguments<a class="anchor" aria-label="anchor" href="#arguments-8"></a></h4>
 <p></p><div class="arguments"><dl><dt><code>deep</code></dt>
 <dd><p>Whether to make a deep clone.</p></dd>
 
