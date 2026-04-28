@@ -24,8 +24,7 @@ embed_openai(
 
 - model:
 
-  Model identifier. Defaults to `"text-embedding-3-small"` (1536 dims,
-  \\0.02/1M tokens as of late 2025).
+  Model identifier. Defaults to `"text-embedding-3-small"` (1536 dims).
 
 - dims:
 
