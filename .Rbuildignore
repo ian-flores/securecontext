@@ -8,3 +8,4 @@
 ^\.gitignore$
 ^vignettes/.*\.html$
 ^cran-comments\.md$
+^\.claude$
