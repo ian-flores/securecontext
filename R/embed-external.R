@@ -67,8 +67,7 @@ embed_custom <- function(fn, dims, name = "custom") {
 #' enable it when that is acceptable for your data classification.
 #'
 #' @param model Model identifier. Defaults to
-#'   `"text-embedding-3-small"` (1536 dims, \$0.02/1M tokens as of
-#'   late 2025).
+#'   `"text-embedding-3-small"` (1536 dims).
 #' @param dims Expected dimensionality. Defaults to `1536L` which
 #'   matches `text-embedding-3-small`. Pass the correct value for other
 #'   models (e.g. `3072L` for `text-embedding-3-large`).

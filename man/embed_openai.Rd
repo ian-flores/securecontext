@@ -15,8 +15,7 @@ embed_openai(
 }
 \arguments{
 \item{model}{Model identifier. Defaults to
-\code{"text-embedding-3-small"} (1536 dims, \$0.02/1M tokens as of
-late 2025).}
+\code{"text-embedding-3-small"} (1536 dims).}
 
 \item{dims}{Expected dimensionality. Defaults to \code{1536L} which
 matches \code{text-embedding-3-small}. Pass the correct value for other
