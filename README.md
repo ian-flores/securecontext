@@ -7,8 +7,7 @@
 [![pkgdown](https://github.com/ian-flores/securecontext/actions/workflows/pkgdown.yaml/badge.svg)](https://ian-flores.github.io/securecontext/)
 <!-- badges: end -->
 
-> [!NOTE]
-> Experimental release. APIs may change before the 1.0 stabilization; track the lifecycle badge above for the current tier.
+> **Note:** Experimental release. APIs may change before the 1.0 stabilization — track the lifecycle badge above for the current tier.
 
 Memory, knowledge persistence, RAG retrieval, and context management for R LLM agents.
 
@@ -63,8 +62,9 @@ pak::pak("ian-flores/securecontext")
 
 - **Document chunking** -- fixed-size, sentence, paragraph, and recursive strategies
 - **TF-IDF embeddings** -- local embeddings with no external API required
-- **Vector store** -- in-memory cosine similarity search with RDS persistence
-- **Knowledge store** -- persistent JSONL key-value storage
+- **External embedders** -- `embed_custom()` adapter for any embedding function and `embed_openai()` convenience for OpenAI's REST API
+- **Vector store** -- in-memory cosine similarity search with RDS persistence and public `metadata()` / `ids()` accessors
+- **Knowledge store** -- persistent JSONL key-value storage with `get_metadata()` accessor
 - **Semantic retrieval** -- query documents by meaning
 - **Context builder** -- token-aware priority-based context assembly
 - **Integration helpers** -- works with orchestr and ellmer
@@ -94,6 +94,30 @@ chunk_fixed(paste(rep("word", 200), collapse = " "), size = 100, overlap = 10)
 # Recursive splitting (tries paragraph -> newline -> sentence -> space)
 chunk_recursive(text, max_size = 80)
 ```
+
+### External Embedders
+
+By default, securecontext uses local TF-IDF embeddings. When you want to plug in an external embedding model, `embed_custom()` adapts any function `function(texts) -> matrix` into a `securecontext_embedder`:
+
+```r
+my_embed <- function(texts) {
+  # call your local model, ONNX runtime, REST API, etc.
+  matrix(runif(length(texts) * 384L), ncol = 384L)
+}
+emb <- embed_custom(my_embed, dims = 384L, name = "minilm")
+```
+
+For OpenAI specifically, `embed_openai()` wraps the REST endpoint via `httr2` (Suggests):
+
+```r
+emb <- embed_openai(
+  model = "text-embedding-3-small",
+  dims = 1536L,
+  api_key = Sys.getenv("OPENAI_API_KEY")
+)
+```
+
+Note that unlike `embed_tfidf()`, `embed_openai()` sends text to OpenAI; only enable it when that's acceptable for your data classification. ellmer does not currently expose an embeddings API, so there is no `embed_ellmer()` — wrap it through `embed_custom()` if you have your own SDK preference.
 
 ### Knowledge Store
 
@@ -126,11 +150,11 @@ Assemble token-aware context for LLM prompts. Higher-priority items are included
 
 ```r
 cb <- context_builder(max_tokens = 200)
-cb <- cb_add(cb, "System instructions go here.", priority = 10, label = "system")
-cb <- cb_add(cb, "Relevant retrieved passage.", priority = 5, label = "rag")
-cb <- cb_add(cb, "Nice-to-have background info.", priority = 1, label = "background")
+cb <- context_add(cb, "System instructions go here.", priority = 10, label = "system")
+cb <- context_add(cb, "Relevant retrieved passage.", priority = 5, label = "rag")
+cb <- context_add(cb, "Nice-to-have background info.", priority = 1, label = "background")
 
-result <- cb_build(cb)
+result <- context_build(cb)
 result$context       # assembled text, highest priority first
 result$included      # labels of items that fit
 result$excluded      # labels of items that were dropped
