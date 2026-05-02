@@ -66,6 +66,7 @@ Create a builder with a token budget, add content with priorities, and
 build the final context string.
 
 ``` r
+
 library(securecontext)
 
 cb <- context_builder(max_tokens = 100)
@@ -120,6 +121,7 @@ chunks with cosine similarity scores, you can pass those scores as
 priorities so the most relevant chunks are included first:
 
 ``` r
+
 cb <- context_builder(max_tokens = 500)
 
 # System prompt gets highest priority -- always included
@@ -148,6 +150,7 @@ to clear all items and reuse the same builder without re-specifying the
 token budget.
 
 ``` r
+
 cb2 <- cb_reset(cb)
 cb2 <- cb_add(cb2, "New system prompt.", priority = 10, label = "system_v2")
 result2 <- cb_build(cb2)
@@ -165,6 +168,7 @@ combines both steps in a single call. It retrieves the top-k chunks from
 a retriever and packs them into a token-limited string.
 
 ``` r
+
 result <- context_for_chat(ret, "statistics", max_tokens = 2000)
 cat(result$context)
 ```

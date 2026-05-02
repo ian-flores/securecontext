@@ -42,6 +42,7 @@ middle column (search) runs on every query. The right column (assemble)
 packs results into a token budget before sending to an LLM.
 
 ``` r
+
 library(securecontext)
 ```
 
@@ -55,6 +56,7 @@ which source a retrieved chunk came from. Documents are S7 objects, so
 properties are accessed with `@`.
 
 ``` r
+
 doc_r <- document(
   "R is a programming language for statistical computing and graphics.
 It is widely used among statisticians and data scientists. R provides
@@ -84,7 +86,7 @@ like C and Fortran.",
 
 # S7 property access with @
 doc_r@id
-#> [1] "doc_20260428081833_c6be45ee"
+#> [1] "doc_20260502192510_c6be45ee"
 doc_r@metadata
 #> $source
 #> [1] "intro"
@@ -134,6 +136,7 @@ The right strategy depends on your content and how users will query it:
   unsure.
 
 ``` r
+
 # Sentence-level chunking
 sentences <- chunk_text(doc_r@text, strategy = "sentence")
 cat("Sentence chunks:", length(sentences), "\n")
@@ -162,6 +165,7 @@ The `overlap` parameter creates a sliding window, ensuring that
 information near chunk boundaries appears in both adjacent chunks:
 
 ``` r
+
 long_text <- paste(
   "The tidyverse is a collection of R packages designed for data science.",
   "It includes ggplot2 for visualization, dplyr for data manipulation,",
@@ -206,6 +210,7 @@ weights; distinctive words like “regression” get high weights.
 Everything runs locally; no API keys required.
 
 ``` r
+
 # Gather all document texts as the training corpus
 corpus <- c(doc_r@text, doc_python@text, doc_julia@text)
 
@@ -233,6 +238,7 @@ magnitude. A score of 1.0 means identical direction (maximum
 similarity); 0.0 means orthogonal (no similarity).
 
 ``` r
+
 vs <- vector_store$new(dims = embedder@dims)
 
 # Embed and store each document manually
@@ -258,6 +264,7 @@ you build an embedding index once and reuse it across R sessions without
 re-embedding your corpus:
 
 ``` r
+
 tmp <- tempfile(fileext = ".rds")
 vs$save(tmp)
 
@@ -287,6 +294,7 @@ boilerplate and ensures that chunking and embedding stay consistent
 between ingest and query time.
 
 ``` r
+
 # Fresh store for the retriever
 vs_ret <- vector_store$new(dims = embedder@dims)
 ret <- retriever(vs_ret, embedder)
@@ -302,9 +310,9 @@ cat("Chunks in store:", vs_ret$size(), "\n\n")
 hits <- retrieve(ret, "machine learning", k = 3)
 print(hits)
 #>                                    id     score
-#> 1 doc_20260428081833_e35844e7_chunk_4 0.3992843
-#> 2 doc_20260428081833_c6be45ee_chunk_1 0.0000000
-#> 3 doc_20260428081833_c6be45ee_chunk_2 0.0000000
+#> 1 doc_20260502192510_e35844e7_chunk_4 0.3992843
+#> 2 doc_20260502192510_c6be45ee_chunk_1 0.0000000
+#> 3 doc_20260502192510_c6be45ee_chunk_2 0.0000000
 ```
 
 The returned data frame contains chunk IDs and cosine similarity scores.
@@ -325,6 +333,7 @@ append-friendly and human-readable. Data persists across R sessions
 automatically.
 
 ``` r
+
 ks <- knowledge_store$new(path = tempfile(fileext = ".jsonl"))
 
 # Store some facts
@@ -370,6 +379,7 @@ patterns, see
 [`vignette("context-building")`](https://ian-flores.github.io/securecontext/articles/context-building.md).
 
 ``` r
+
 cb <- context_builder(max_tokens = 100)
 
 # Add content with different priorities (higher = included first)
@@ -427,6 +437,7 @@ to clear all items and reuse the same builder with a new turn of
 conversation:
 
 ``` r
+
 cb2 <- cb_reset(cb)
 #> Warning: `cb_reset()` was deprecated in securecontext 0.2.0.
 #> ℹ Please use `context_reset()` instead.
@@ -449,6 +460,7 @@ for an agent: retrieve relevant information, assemble a context window,
 and pass it to an LLM provider.
 
 ``` r
+
 context_result <- context_for_chat(ret, "statistical computing", max_tokens = 2000, k = 5)
 
 cat("Context for LLM:\n")

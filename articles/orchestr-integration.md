@@ -34,6 +34,7 @@ repeated here for completeness. Everything runs locally; no external API
 calls required.
 
 ``` r
+
 library(securecontext)
 library(orchestr)
 library(ellmer)
@@ -78,6 +79,7 @@ storage, persistence, and search capabilities of the knowledge store are
 fully preserved; the adapter just translates method calls.
 
 ``` r
+
 # Create a persistent knowledge store
 ks <- knowledge_store$new(path = "agent-memory.jsonl")
 
@@ -122,6 +124,7 @@ distinct graph nodes, each step is independently testable and
 replaceable.
 
 ``` r
+
 # Node 1: retrieve relevant chunks and build context
 retrieve_node <- function(state, config) {
   query <- state$messages[[length(state$messages)]]
@@ -188,6 +191,7 @@ treatment of priority strategies and overflow behavior, see
 Here is a practical example using retrieval scores as priorities:
 
 ``` r
+
 cb <- context_builder(max_tokens = 500)
 
 # System prompt gets highest priority -- always included
@@ -214,6 +218,7 @@ Use
 between turns to reuse the same builder:
 
 ``` r
+
 cb <- cb_reset(cb)
 # Now add fresh content for the next turn
 ```
@@ -226,6 +231,7 @@ agents durable recall: the agent remembers user preferences, past
 queries, and learned facts across restarts.
 
 ``` r
+
 # Knowledge store persists to disk
 ks <- knowledge_store$new(path = "long-term-memory.jsonl")
 
@@ -255,6 +261,7 @@ the LLM answers using grounded context, and the agent persists what it
 learns for future sessions.
 
 ``` r
+
 library(securecontext)
 library(orchestr)
 library(ellmer)

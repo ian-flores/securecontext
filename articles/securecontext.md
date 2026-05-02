@@ -52,14 +52,15 @@ can match a query against focused passages rather than entire documents.
 securecontext ships four chunking strategies, each suited to different
 content types:
 
-| Strategy      | How it splits                             | Best for                   |
-|:--------------|:------------------------------------------|:---------------------------|
-| `"sentence"`  | On sentence boundaries (`.` + space)      | Prose, documentation       |
-| `"paragraph"` | On double newlines                        | Structured reports         |
-| `"fixed"`     | Fixed character width with overlap        | Uniform input requirements |
-| `"recursive"` | Hierarchical separators (LangChain-style) | Mixed content              |
+| Strategy | How it splits | Best for |
+|:---|:---|:---|
+| `"sentence"` | On sentence boundaries (`.` + space) | Prose, documentation |
+| `"paragraph"` | On double newlines | Structured reports |
+| `"fixed"` | Fixed character width with overlap | Uniform input requirements |
+| `"recursive"` | Hierarchical separators (LangChain-style) | Mixed content |
 
 ``` r
+
 library(securecontext)
 
 doc <- document(
@@ -90,6 +91,7 @@ across R sessions, making it suitable for agents that need durable
 memory.
 
 ``` r
+
 ks <- knowledge_store$new(path = tempfile(fileext = ".jsonl"))
 
 ks$set("user.name", "Alice")

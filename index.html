@@ -54,7 +54,7 @@
 <!-- badges: start -->
 
 <blockquote>
-<p>[!NOTE] Experimental release. APIs may change before the 1.0 stabilization; track the lifecycle badge above for the current tier.</p>
+<p><strong>Note:</strong> Experimental release. APIs may change before the 1.0 stabilization — track the lifecycle badge above for the current tier.</p>
 </blockquote>
 <p>Memory, knowledge persistence, RAG retrieval, and context management for R LLM agents.</p>
 <div class="section level2">
@@ -89,36 +89,36 @@
 <col width="60%">
 <col width="40%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th>Package</th>
 <th>Role</th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td><a href="https://github.com/ian-flores/securer" class="external-link">securer</a></td>
 <td>Sandboxed R execution with tool-call IPC</td>
 </tr>
-<tr class="even">
+<tr>
 <td><a href="https://github.com/ian-flores/securetools" class="external-link">securetools</a></td>
 <td>Pre-built security-hardened tool definitions</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><a href="https://github.com/ian-flores/secureguard" class="external-link">secureguard</a></td>
 <td>Input/code/output guardrails (injection, PII, secrets)</td>
 </tr>
-<tr class="even">
+<tr>
 <td><a href="https://github.com/ian-flores/orchestr" class="external-link">orchestr</a></td>
 <td>Graph-based agent orchestration</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><a href="https://github.com/ian-flores/securecontext" class="external-link">securecontext</a></td>
 <td>Document chunking, embeddings, RAG retrieval</td>
 </tr>
-<tr class="even">
+<tr>
 <td><a href="https://github.com/ian-flores/securetrace" class="external-link">securetrace</a></td>
 <td>Structured tracing, token/cost accounting, JSONL export</td>
 </tr>
-<tr class="odd">
+<tr>
 <td><a href="https://github.com/ian-flores/securebench" class="external-link">securebench</a></td>
 <td>Guardrail benchmarking with precision/recall/F1 metrics</td>
 </tr>
@@ -141,9 +141,11 @@
 <li>
 <strong>TF-IDF embeddings</strong> – local embeddings with no external API required</li>
 <li>
-<strong>Vector store</strong> – in-memory cosine similarity search with RDS persistence</li>
+<strong>External embedders</strong> – <code><a href="reference/embed_custom.html">embed_custom()</a></code> adapter for any embedding function and <code><a href="reference/embed_openai.html">embed_openai()</a></code> convenience for OpenAI’s REST API</li>
 <li>
-<strong>Knowledge store</strong> – persistent JSONL key-value storage</li>
+<strong>Vector store</strong> – in-memory cosine similarity search with RDS persistence and public <code>metadata()</code> / <code>ids()</code> accessors</li>
+<li>
+<strong>Knowledge store</strong> – persistent JSONL key-value storage with <code>get_metadata()</code> accessor</li>
 <li>
 <strong>Semantic retrieval</strong> – query documents by meaning</li>
 <li>
@@ -177,10 +179,29 @@
 <span><span class="fu"><a href="reference/chunk_recursive.html">chunk_recursive</a></span><span class="op">(</span><span class="va">text</span>, max_size <span class="op">=</span> <span class="fl">80</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
+<h3 id="external-embedders">External Embedders<a class="anchor" aria-label="anchor" href="#external-embedders"></a>
+</h3>
+<p>By default, securecontext uses local TF-IDF embeddings. When you want to plug in an external embedding model, <code><a href="reference/embed_custom.html">embed_custom()</a></code> adapts any function <code>function(texts) -&gt; matrix</code> into a <code>securecontext_embedder</code>:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">my_embed</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">texts</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="co"># call your local model, ONNX runtime, REST API, etc.</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">texts</span><span class="op">)</span> <span class="op">*</span> <span class="fl">384L</span><span class="op">)</span>, ncol <span class="op">=</span> <span class="fl">384L</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span><span class="va">emb</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/embed_custom.html">embed_custom</a></span><span class="op">(</span><span class="va">my_embed</span>, dims <span class="op">=</span> <span class="fl">384L</span>, name <span class="op">=</span> <span class="st">"minilm"</span><span class="op">)</span></span></code></pre></div>
+<p>For OpenAI specifically, <code><a href="reference/embed_openai.html">embed_openai()</a></code> wraps the REST endpoint via <code>httr2</code> (Suggests):</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">emb</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/embed_openai.html">embed_openai</a></span><span class="op">(</span></span>
+<span>  model <span class="op">=</span> <span class="st">"text-embedding-3-small"</span>,</span>
+<span>  dims <span class="op">=</span> <span class="fl">1536L</span>,</span>
+<span>  api_key <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Sys.getenv.html" class="external-link">Sys.getenv</a></span><span class="op">(</span><span class="st">"OPENAI_API_KEY"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<p>Note that unlike <code><a href="reference/embed_tfidf.html">embed_tfidf()</a></code>, <code><a href="reference/embed_openai.html">embed_openai()</a></code> sends text to OpenAI; only enable it when that’s acceptable for your data classification. ellmer does not currently expose an embeddings API, so there is no <code>embed_ellmer()</code> — wrap it through <code><a href="reference/embed_custom.html">embed_custom()</a></code> if you have your own SDK preference.</p>
+</div>
+<div class="section level3">
 <h3 id="knowledge-store">Knowledge Store<a class="anchor" aria-label="anchor" href="#knowledge-store"></a>
 </h3>
 <p>A persistent JSONL key-value store for agent memory. Entries are keyed strings with optional metadata and timestamps:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># In-memory store</span></span>
 <span><span class="va">ks</span> <span class="op">&lt;-</span> <span class="va"><a href="reference/knowledge_store.html">knowledge_store</a></span><span class="op">$</span><span class="fu">new</span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
@@ -204,13 +225,13 @@
 <h3 id="context-builder">Context Builder<a class="anchor" aria-label="anchor" href="#context-builder"></a>
 </h3>
 <p>Assemble token-aware context for LLM prompts. Higher-priority items are included first; lower-priority items are dropped when the token budget is exceeded:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cb</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/context_builder.html">context_builder</a></span><span class="op">(</span>max_tokens <span class="op">=</span> <span class="fl">200</span><span class="op">)</span></span>
-<span><span class="va">cb</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/context_add.html">cb_add</a></span><span class="op">(</span><span class="va">cb</span>, <span class="st">"System instructions go here."</span>, priority <span class="op">=</span> <span class="fl">10</span>, label <span class="op">=</span> <span class="st">"system"</span><span class="op">)</span></span>
-<span><span class="va">cb</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/context_add.html">cb_add</a></span><span class="op">(</span><span class="va">cb</span>, <span class="st">"Relevant retrieved passage."</span>, priority <span class="op">=</span> <span class="fl">5</span>, label <span class="op">=</span> <span class="st">"rag"</span><span class="op">)</span></span>
-<span><span class="va">cb</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/context_add.html">cb_add</a></span><span class="op">(</span><span class="va">cb</span>, <span class="st">"Nice-to-have background info."</span>, priority <span class="op">=</span> <span class="fl">1</span>, label <span class="op">=</span> <span class="st">"background"</span><span class="op">)</span></span>
+<span><span class="va">cb</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/context_add.html">context_add</a></span><span class="op">(</span><span class="va">cb</span>, <span class="st">"System instructions go here."</span>, priority <span class="op">=</span> <span class="fl">10</span>, label <span class="op">=</span> <span class="st">"system"</span><span class="op">)</span></span>
+<span><span class="va">cb</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/context_add.html">context_add</a></span><span class="op">(</span><span class="va">cb</span>, <span class="st">"Relevant retrieved passage."</span>, priority <span class="op">=</span> <span class="fl">5</span>, label <span class="op">=</span> <span class="st">"rag"</span><span class="op">)</span></span>
+<span><span class="va">cb</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/context_add.html">context_add</a></span><span class="op">(</span><span class="va">cb</span>, <span class="st">"Nice-to-have background info."</span>, priority <span class="op">=</span> <span class="fl">1</span>, label <span class="op">=</span> <span class="st">"background"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/context_build.html">cb_build</a></span><span class="op">(</span><span class="va">cb</span><span class="op">)</span></span>
+<span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/context_build.html">context_build</a></span><span class="op">(</span><span class="va">cb</span><span class="op">)</span></span>
 <span><span class="va">result</span><span class="op">$</span><span class="va">context</span>       <span class="co"># assembled text, highest priority first</span></span>
 <span><span class="va">result</span><span class="op">$</span><span class="va">included</span>      <span class="co"># labels of items that fit</span></span>
 <span><span class="va">result</span><span class="op">$</span><span class="va">excluded</span>      <span class="co"># labels of items that were dropped</span></span>
@@ -220,7 +241,7 @@
 <div class="section level2">
 <h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
 </h2>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ian-flores.github.io/securecontext/">securecontext</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Create documents</span></span>

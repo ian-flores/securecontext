@@ -1,7 +1,7 @@
 # securecontext
 
-> \[!NOTE\] Experimental release. APIs may change before the 1.0
-> stabilization; track the lifecycle badge above for the current tier.
+> **Note:** Experimental release. APIs may change before the 1.0
+> stabilization — track the lifecycle badge above for the current tier.
 
 Memory, knowledge persistence, RAG retrieval, and context management for
 R LLM agents.
@@ -48,19 +48,20 @@ sits alongside securetools and secureguard in the middle tier, giving
 agents the ability to chunk documents, build TF-IDF embeddings locally,
 and retrieve relevant context for LLM prompts.
 
-| Package                                                      | Role                                                    |
-|--------------------------------------------------------------|---------------------------------------------------------|
-| [securer](https://github.com/ian-flores/securer)             | Sandboxed R execution with tool-call IPC                |
-| [securetools](https://github.com/ian-flores/securetools)     | Pre-built security-hardened tool definitions            |
-| [secureguard](https://github.com/ian-flores/secureguard)     | Input/code/output guardrails (injection, PII, secrets)  |
-| [orchestr](https://github.com/ian-flores/orchestr)           | Graph-based agent orchestration                         |
-| [securecontext](https://github.com/ian-flores/securecontext) | Document chunking, embeddings, RAG retrieval            |
-| [securetrace](https://github.com/ian-flores/securetrace)     | Structured tracing, token/cost accounting, JSONL export |
-| [securebench](https://github.com/ian-flores/securebench)     | Guardrail benchmarking with precision/recall/F1 metrics |
+| Package | Role |
+|----|----|
+| [securer](https://github.com/ian-flores/securer) | Sandboxed R execution with tool-call IPC |
+| [securetools](https://github.com/ian-flores/securetools) | Pre-built security-hardened tool definitions |
+| [secureguard](https://github.com/ian-flores/secureguard) | Input/code/output guardrails (injection, PII, secrets) |
+| [orchestr](https://github.com/ian-flores/orchestr) | Graph-based agent orchestration |
+| [securecontext](https://github.com/ian-flores/securecontext) | Document chunking, embeddings, RAG retrieval |
+| [securetrace](https://github.com/ian-flores/securetrace) | Structured tracing, token/cost accounting, JSONL export |
+| [securebench](https://github.com/ian-flores/securebench) | Guardrail benchmarking with precision/recall/F1 metrics |
 
 ## Installation
 
 ``` r
+
 # install.packages("pak")
 pak::pak("ian-flores/securecontext")
 ```
@@ -70,9 +71,15 @@ pak::pak("ian-flores/securecontext")
 - **Document chunking** – fixed-size, sentence, paragraph, and recursive
   strategies
 - **TF-IDF embeddings** – local embeddings with no external API required
+- **External embedders** –
+  [`embed_custom()`](https://ian-flores.github.io/securecontext/reference/embed_custom.md)
+  adapter for any embedding function and
+  [`embed_openai()`](https://ian-flores.github.io/securecontext/reference/embed_openai.md)
+  convenience for OpenAI’s REST API
 - **Vector store** – in-memory cosine similarity search with RDS
-  persistence
-- **Knowledge store** – persistent JSONL key-value storage
+  persistence and public `metadata()` / `ids()` accessors
+- **Knowledge store** – persistent JSONL key-value storage with
+  `get_metadata()` accessor
 - **Semantic retrieval** – query documents by meaning
 - **Context builder** – token-aware priority-based context assembly
 - **Integration helpers** – works with orchestr and ellmer
@@ -84,6 +91,7 @@ Split text into manageable pieces using one of four strategies.
 dispatches to the appropriate strategy function:
 
 ``` r
+
 library(securecontext)
 
 text <- "First paragraph with several sentences.\n\nSecond paragraph here.\n\nThird."
@@ -105,12 +113,52 @@ chunk_fixed(paste(rep("word", 200), collapse = " "), size = 100, overlap = 10)
 chunk_recursive(text, max_size = 80)
 ```
 
+### External Embedders
+
+By default, securecontext uses local TF-IDF embeddings. When you want to
+plug in an external embedding model,
+[`embed_custom()`](https://ian-flores.github.io/securecontext/reference/embed_custom.md)
+adapts any function `function(texts) -> matrix` into a
+`securecontext_embedder`:
+
+``` r
+
+my_embed <- function(texts) {
+  # call your local model, ONNX runtime, REST API, etc.
+  matrix(runif(length(texts) * 384L), ncol = 384L)
+}
+emb <- embed_custom(my_embed, dims = 384L, name = "minilm")
+```
+
+For OpenAI specifically,
+[`embed_openai()`](https://ian-flores.github.io/securecontext/reference/embed_openai.md)
+wraps the REST endpoint via `httr2` (Suggests):
+
+``` r
+
+emb <- embed_openai(
+  model = "text-embedding-3-small",
+  dims = 1536L,
+  api_key = Sys.getenv("OPENAI_API_KEY")
+)
+```
+
+Note that unlike
+[`embed_tfidf()`](https://ian-flores.github.io/securecontext/reference/embed_tfidf.md),
+[`embed_openai()`](https://ian-flores.github.io/securecontext/reference/embed_openai.md)
+sends text to OpenAI; only enable it when that’s acceptable for your
+data classification. ellmer does not currently expose an embeddings API,
+so there is no `embed_ellmer()` — wrap it through
+[`embed_custom()`](https://ian-flores.github.io/securecontext/reference/embed_custom.md)
+if you have your own SDK preference.
+
 ### Knowledge Store
 
 A persistent JSONL key-value store for agent memory. Entries are keyed
 strings with optional metadata and timestamps:
 
 ``` r
+
 # In-memory store
 ks <- knowledge_store$new()
 
@@ -138,12 +186,13 @@ included first; lower-priority items are dropped when the token budget
 is exceeded:
 
 ``` r
-cb <- context_builder(max_tokens = 200)
-cb <- cb_add(cb, "System instructions go here.", priority = 10, label = "system")
-cb <- cb_add(cb, "Relevant retrieved passage.", priority = 5, label = "rag")
-cb <- cb_add(cb, "Nice-to-have background info.", priority = 1, label = "background")
 
-result <- cb_build(cb)
+cb <- context_builder(max_tokens = 200)
+cb <- context_add(cb, "System instructions go here.", priority = 10, label = "system")
+cb <- context_add(cb, "Relevant retrieved passage.", priority = 5, label = "rag")
+cb <- context_add(cb, "Nice-to-have background info.", priority = 1, label = "background")
+
+result <- context_build(cb)
 result$context       # assembled text, highest priority first
 result$included      # labels of items that fit
 result$excluded      # labels of items that were dropped
@@ -153,6 +202,7 @@ result$total_tokens  # token count of the assembled context
 ## Quick start
 
 ``` r
+
 library(securecontext)
 
 # Create documents
